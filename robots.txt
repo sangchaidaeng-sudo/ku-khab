@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ku-khab.vercel.app/sitemap.xml

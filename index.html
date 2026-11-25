@@ -4,8 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#faf9f6">
-<meta name="description" content="คาบ — ตารางเรียน KU ฉบับนิสิต วางรายวิชาจาก MyKU แล้วดูคาบถัดไป ตารางทั้งสัปดาห์ และบันทึกเป็นรูปได้ ไม่ต้องใช้รหัสนนทรี">
+<meta name="description" content="คาบ เว็บจัดตารางเรียนฟรีสำหรับนิสิตเกษตรศาสตร์ (KU) วางรายวิชาจาก MyKU แล้วได้ตารางเรียนทันที รู้คาบถัดไป เตือนเวลาชน บันทึกเป็นรูปวอลเปเปอร์ได้ ไม่ต้องใช้รหัสนนทรี">
 <meta property="og:title" content="คาบ · ตารางเรียน KU ฉบับนิสิต">
+<meta property="og:site_name" content="คาบ">
+<meta property="og:locale" content="th_TH">
 <meta property="og:description" content="วางรายวิชาจาก MyKU แล้วรู้ทันทีว่าคาบถัดไปคืออะไร ไม่ต้องใช้รหัสนนทรี">
 <meta property="og:image" content="https://ku-khab.vercel.app/og.png">
 <meta property="og:url" content="https://ku-khab.vercel.app/">
@@ -20,7 +22,7 @@
 <meta name="apple-mobile-web-app-title" content="คาบ">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-<title>คาบ · ตารางเรียน KU</title>
+<title>คาบ · ตารางเรียน KU ฉบับนิสิต | จัดตารางเรียน ม.เกษตรศาสตร์ จาก MyKU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -42,7 +44,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .logo .lg{width:36px;height:36px;border-radius:10px;box-shadow:0 2px 6px -2px #0003,0 0 0 1px #0000000d}
 .logo b{font-size:22px;letter-spacing:-.01em}.logo small{display:block;font-size:12px;color:var(--mute);line-height:1;margin-top:-2px}
 .tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:14px;margin-left:auto}
-.tabs a{display:flex;align-items:center;gap:8px;padding:0 16px;min-height:40px;border-radius:10px;text-decoration:none;color:var(--mute);font-weight:500;font-size:15px}
+.tabs a{display:flex;align-items:center;gap:8px;padding:0 16px;min-height:40px;border-radius:10px;text-decoration:none;color:color-mix(in srgb,var(--ink) 74%,var(--soft));font-weight:500;font-size:15px}
 .tabs a.on{background:var(--sf);color:var(--ink);box-shadow:0 1px 3px #0001}
 .tabs a:focus-visible,.b:focus-visible,.dchip:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
 .thb{min-height:44px;min-width:44px;border-radius:12px;border:1px solid var(--line);background:var(--sf);cursor:pointer;display:grid;place-items:center}
@@ -66,13 +68,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 .term{border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--mute);font-size:16px;padding:4px 2px;width:min(320px,100%);margin-bottom:4px}
 .xb{margin-left:auto;min-height:42px}
 .vseg{display:flex;background:var(--soft);border-radius:12px;padding:3px}
-.vseg button{border:0;background:transparent;border-radius:9px;min-height:36px;padding:0 14px;cursor:pointer;font-weight:500;color:var(--mute);font-size:14px}
+.vseg button{border:0;background:transparent;border-radius:9px;min-height:36px;padding:0 14px;cursor:pointer;font-weight:500;color:color-mix(in srgb,var(--ink) 74%,var(--soft));font-size:14px}
 .vseg button.on{background:var(--sf);color:var(--ink);box-shadow:0 1px 3px #0002}
 .xmd{width:min(860px,100%)}
 .xprev{background:var(--soft);border-radius:14px;padding:10px;display:grid;place-items:center;max-height:58vh;overflow:auto}
 .xprev img{max-width:100%;max-height:54vh;border-radius:8px;box-shadow:0 8px 24px -12px #0005;-webkit-touch-callout:default}
 a.b{text-decoration:none}
 .foot2 a{color:inherit;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.about{border-top:1px solid var(--line);margin-top:8px;padding:18px 0 6px;color:var(--mute);font-size:14px;max-width:760px}
+.about h2{font-size:16px;color:var(--ink);margin:0 0 6px}.about p{margin:0 0 8px}
+.about details{border-top:1px dashed var(--line);padding:6px 0}.about summary{cursor:pointer;color:var(--ink);min-height:36px;display:flex;align-items:center}
 /* day view */
 .dayv{display:none;margin-bottom:24px}
 body.dv .dayv{display:block}body.dv .week{display:none}
@@ -87,7 +93,7 @@ body.dv .dayv{display:block}body.dv .week{display:none}
 .drow .dt{padding-top:10px;text-align:right}.drow .dt b{display:block;font-size:17px;line-height:1.1}.drow .dt small{color:var(--mute);font-size:12px}
 .drow .card2{background:var(--cb);color:var(--ci);border-radius:16px;padding:12px 14px;display:grid;gap:2px;border:2px solid transparent}
 .drow .c{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px}.drow .n{font-weight:600;font-size:17px;line-height:1.3}.drow .m{font-size:13px;opacity:.8}
-.drow.cur .card2{border-color:var(--ce)}.drow.past{opacity:.5}
+.drow.cur .card2{border-color:var(--ce)}.drow.past .card2{filter:saturate(.25)}.drow.past .card2 .n{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,var(--ci) 45%,transparent)}
 .drow .live{font-size:12px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:8px}.drow .live i{flex:1;height:4px;border-radius:4px;background:color-mix(in srgb,var(--ci) 20%,transparent);overflow:hidden}.drow .live i b{display:block;height:100%;background:var(--ci)}
 .drow.clash .card2{border:2px dashed var(--bad)}
 .gap{margin-left:68px;font-size:13px;color:var(--mute);padding:2px 0 2px 14px;border-left:2px dotted var(--line)}
@@ -195,6 +201,7 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
  .ci{grid-template-columns:6px minmax(0,1fr) auto;}.ci .ic{grid-column:2/-1;justify-self:start;min-height:36px}
 }
 </style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebApplication", "name": "คาบ", "alternateName": ["Khab", "ku-khab", "ตารางเรียน KU"], "url": "https://ku-khab.vercel.app/", "applicationCategory": "EducationalApplication", "operatingSystem": "Any", "inLanguage": "th", "description": "เว็บจัดตารางเรียนฟรีสำหรับนิสิตมหาวิทยาลัยเกษตรศาสตร์ วางรายวิชาจาก MyKU แล้วได้ตารางเรียนรายสัปดาห์", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "THB"}, "author": {"@type": "Person", "name": "Daeng", "url": "https://www.instagram.com/daen6_/"}, "image": "https://ku-khab.vercel.app/og.png"}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "ต้องใช้รหัสนนทรีไหม", "acceptedAnswer": {"@type": "Answer", "text": "ไม่ต้อง คาบไม่ขอรหัสผ่านใด ๆ ข้อมูลตารางเก็บอยู่ในเบราว์เซอร์ของคุณเท่านั้น"}}, {"@type": "Question", "name": "ใช้บนมือถือได้ไหม", "acceptedAnswer": {"@type": "Answer", "text": "ได้ เปิดใน Safari หรือ Chrome แล้วเลือกเพิ่มไปยังหน้าจอโฮม"}}, {"@type": "Question", "name": "ใช้แทน KU Get Reg ได้ไหม", "acceptedAnswer": {"@type": "Answer", "text": "ใช้ดูและจัดตารางเรียนได้โดยไม่ต้องล็อกอิน คาบเป็นโปรเจกต์อิสระ ไม่เกี่ยวข้องกับ KU Get Reg หรือมหาวิทยาลัย"}}]}]}</script>
 </head>
 <body>
 <div class="wrap">
@@ -203,8 +210,9 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
     <nav class="tabs" id="tabs" aria-label="เมนู"></nav>
     <div class="tm"><button class="thb" id="thBtn" aria-label="เปลี่ยนธีม" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button><div class="pop" id="pop"></div></div>
   </header>
-
-  <section class="view" id="v-week">
+<main id="main">
+  <section class="view" id="v-week" aria-labelledby="wh1">
+    <h1 id="wh1" class="sr">ตารางเรียนของฉัน</h1>
     <div class="board" id="board" aria-live="polite"></div>
     <div class="tbar" id="tbar"></div>
     <div class="dayv" id="dayv"></div>
@@ -271,6 +279,14 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
     <div class="bar" style="margin:10px 0 16px"><button class="b p" id="add">+ เพิ่มวิชาเอง</button><button class="b" id="clear">ล้างทั้งหมด</button></div>
     <div class="clist" id="clist"></div>
   </section>
+</main>
+  <section class="about" aria-labelledby="ab">
+    <h2 id="ab">คาบ คืออะไร</h2>
+    <p>คาบ เป็นเว็บแอปจัดตารางเรียนฟรีสำหรับนิสิตมหาวิทยาลัยเกษตรศาสตร์ ทั้งบางเขน กำแพงแสน ศรีราชา และสกลนคร คัดลอกรายวิชาจากหน้าผลการลงทะเบียนใน MyKU มาวาง แล้วได้ตารางเรียนรายสัปดาห์ บอกคาบที่กำลังเรียนและคาบถัดไป เตือนวิชาที่เวลาชนกัน และบันทึกตารางเป็นรูปไว้ตั้งวอลเปเปอร์มือถือได้</p>
+    <details><summary>ต้องใช้รหัสนนทรีไหม</summary><p>ไม่ต้อง คาบไม่ขอรหัสผ่านใด ๆ ข้อมูลตารางเก็บอยู่ในเบราว์เซอร์ของคุณเท่านั้น ไม่ถูกส่งขึ้นเซิร์ฟเวอร์</p></details>
+    <details><summary>ใช้บนมือถือได้ไหม</summary><p>ได้ เปิดใน Safari หรือ Chrome แล้วเลือก “เพิ่มไปยังหน้าจอโฮม” จะได้ไอคอนคาบไว้เปิดเหมือนแอป</p></details>
+    <details><summary>ใช้แทน KU Get Reg ได้ไหม</summary><p>ใช้ดูและจัดตารางเรียนได้ โดยไม่ต้องล็อกอิน คาบเป็นโปรเจกต์อิสระ ไม่เกี่ยวข้องกับ KU Get Reg หรือมหาวิทยาลัย</p></details>
+  </section>
   <footer class="foot2">คาบ ไม่ใช่ระบบของมหาวิทยาลัย ตรวจสอบตารางจริงกับ MyKU เสมอ · พัฒนาโดย <a href="https://www.instagram.com/daen6_/" target="_blank" rel="noopener">@daen6_</a></footer>
 </div>
 
@@ -326,7 +342,7 @@ const THEMES={
   pal:[['#e4e4fb','#2e2e7a','#6464d8'],['#ece4fb','#4a2a85','#8d5fe0'],['#e0ebfb','#1f4a85','#4d8be0'],['#f3e4f6','#6a2a75','#c35fd0'],['#e4f0f8','#1f5875','#4fa3cf'],['#efe9fb','#45307a','#9a7be6'],['#e6e9f7','#2b3a70','#6b7fd4'],['#f6e6ef','#7a2a52','#d85f98']]},
  midnight:{n:'เที่ยงคืน',g:1,dark:1,by:'day',v:CH('#111116','#18181f','#f2f2f7','#9a9aab','#2b2b36','#20202a','#8c9bff','#0f0f1a','#ffcf5a','#1a1300','#1d1d2b','#f2f2f7','#a0a0c0','#1c1c27','#22222c'),
   pal:[['#4a1f26','#ffd6dc','#e5485d'],['#4a2a19','#ffdcc4','#e8742c'],['#463619','#ffe7b3','#e0a526'],['#1e3d2b','#c9f2d8','#30b467'],['#1f2b5c','#d4ddff','#4c6ef5'],['#35215a','#e4d4ff','#9b5cf6'],['#4a1d3a','#ffd1ea','#e0479e'],['#173a3f','#c4eef3','#1fb5c9']]},
- thaiday:{n:'สีประจำวัน',g:1,dark:0,by:'day',v:CH('#faf9f6','#ffffff','#1f2937','#6b7280','#ebe8e2','#f3f1ec','#1f2937','#fff','#fcd34d','#1f2937','#1f2937','#f9fafb','#b8bec8','#fffbeb','#f3f1ec'),
+ thaiday:{n:'สีประจำวัน',g:1,dark:0,by:'day',v:CH('#faf9f6','#ffffff','#1f2937','#5b6170','#ebe8e2','#f3f1ec','#1f2937','#fff','#fcd34d','#1f2937','#1f2937','#f9fafb','#b8bec8','#fffbeb','#f3f1ec'),
   pal:[['#fef3c7','#713f12','#eab308'],['#fce7f3','#831843','#ec4899'],['#dcfce7','#14532d','#22c55e'],['#ffedd5','#7c2d12','#f97316'],['#dbeafe','#1e3a8a','#3b82f6'],['#f3e8ff','#581c87','#a855f7'],['#fee2e2','#7f1d1d','#ef4444'],['#e0f2fe','#0c4a6e','#0ea5e9']]},
  chanom:{n:'ชานม',g:1,dark:0,by:'course',v:CH('#fbf4ea','#fffaf3','#3a2614','#86684c','#efe0cb','#f6e9d6','#7a4a1e','#fff','#f4b860','#3a2614','#5a3517','#fff4e6','#e0c3a0','#fff3e0','#f6ead9'),
   pal:[['#fde2bd','#6b3e0c','#d98a2b'],['#f9d9c2','#6e3216','#d26a3a'],['#f6e3b4','#5e4510','#c79a26'],['#efdcc6','#5a3a1e','#b07a46'],['#fbe6cf','#6a4220','#e09a5a'],['#f2d7cf','#6a2e24','#c5644f'],['#e9e2c4','#4d4320','#a89645'],['#f7dfc9','#62381d','#cf8248']]},
@@ -485,7 +501,7 @@ function render(){
   const cr=C.reduce((a,c)=>a+(+c.credits||0),0);
   const narrow=matchMedia('(max-width:699px)').matches,vw=S.vw||(narrow?'day':'week');
   document.body.classList.toggle('dv',vw==='day'&&ses.length>0);
-  $('tbar').innerHTML=`<span class="st"><b class="num">${C.length}</b>วิชา</span><span class="st"><b class="num">${cr}</b>หน่วยกิต</span><span class="st"><b class="num">${(ses.reduce((a,s)=>a+s.e-s.s,0)/60).toFixed(1).replace('.0','')}</b>ชม./สัปดาห์</span>`+(pairs.size?`<span class="st bad"><b class="num">${pairs.size}</b>คู่เวลาชน</span>`:'')+(ses.length?`<button class="b xb" data-act="export" aria-label="บันทึกตารางเป็นรูป"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>บันทึกรูป</span></button><div class="vseg" role="tablist"><button data-vw="day" class="${vw==='day'?'on':''}">รายวัน</button><button data-vw="week" class="${vw==='week'?'on':''}">ทั้งสัปดาห์</button></div>`:'');
+  $('tbar').innerHTML=`<span class="st"><b class="num">${C.length}</b>วิชา</span><span class="st"><b class="num">${cr}</b>หน่วยกิต</span><span class="st"><b class="num">${(ses.reduce((a,s)=>a+s.e-s.s,0)/60).toFixed(1).replace('.0','')}</b>ชม./สัปดาห์</span>`+(pairs.size?`<span class="st bad"><b class="num">${pairs.size}</b>คู่เวลาชน</span>`:'')+(ses.length?`<button class="b xb" data-act="export" aria-label="บันทึกตารางเป็นรูป"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>บันทึกรูป</span></button><div class="vseg" role="group" aria-label="มุมมอง"><button data-vw="day" class="${vw==='day'?'on':''}" aria-pressed="${vw==='day'}">รายวัน</button><button data-vw="week" class="${vw==='week'?'on':''}" aria-pressed="${vw==='week'}">ทั้งสัปดาห์</button></div>`:'');
   dayView(today,nm,set);
   if(!ses.length){$('week').innerHTML=`<div class="empty">ตารางยังว่าง<br><button class="b p" id="eGo">นำเข้าวิชาจาก MyKU</button></div>`;$('eGo').onclick=()=>go('import')}
   else{
