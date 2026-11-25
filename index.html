@@ -22,18 +22,18 @@
 
 <title>คาบ · ตารางเรียน KU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE: a pocket companion that answers "what's my next class?" before anything else
    IDEA: a departures board for your day: next class big, the week as a calendar column view
    PICTURE: the "now / next" board with live countdown, then Mon–Fri columns with time running down
-   COLOUR and TYPE: deep leaf green + sharp lime; Space Grotesk numbers, IBM Plex Sans Thai text
+   COLOUR and TYPE: deep leaf green + sharp lime; Space Grotesk numbers, Sarabun text
    LAYOUT: board on top, week below; tabs at top on desktop, bottom on phones */
 :root{--bg:#f3f5f0;--sf:#ffffff;--ink:#12201a;--mute:#5f6e66;--line:#e2e7df;--soft:#eaefe6;--pri:#0f3d2e;--priInk:#fff;--acc:#c6f432;--accInk:#12201a;--bad:#e5484d;--board:#0f3d2e;--boardInk:#f2f7ee;--boardMute:#a9c4b5;--today:#f6fbe9}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans Thai",system-ui,sans-serif;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Sarabun",system-ui,sans-serif;overflow-x:clip}
 button,input,select,textarea{font:inherit;color:inherit}
-.num{font-family:"Space Grotesk","IBM Plex Sans Thai",sans-serif;font-variant-numeric:tabular-nums}
+.num{font-family:"Space Grotesk","Sarabun",sans-serif;font-variant-numeric:tabular-nums}
 .wrap{max-width:1180px;margin:0 auto;padding:0 max(3vw,14px,env(safe-area-inset-right)) 0 max(3vw,14px,env(safe-area-inset-left))}
 /* top */
 .top{display:flex;align-items:center;gap:16px;padding:16px 0;flex-wrap:wrap}
@@ -142,7 +142,7 @@ textarea:focus,input.f:focus,select.f:focus{outline:2px solid var(--pri);outline
 .ci{display:grid;grid-template-columns:6px minmax(0,1fr) auto auto;gap:14px;align-items:center;background:var(--sf);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
 .ci .bar6{width:6px;align-self:stretch;border-radius:6px;background:var(--ce)}
 .ci .nm{font-weight:600}.ci .sub{font-size:13px;color:var(--mute)}.ci .x{color:var(--bad)}
-.ci .cr{font-size:22px;font-weight:700;text-align:right;line-height:1}.ci .cr small{display:block;font-size:11px;color:var(--mute);font-weight:500;font-family:"IBM Plex Sans Thai",sans-serif}
+.ci .cr{font-size:22px;font-weight:700;text-align:right;line-height:1}.ci .cr small{display:block;font-size:11px;color:var(--mute);font-weight:500;font-family:"Sarabun",sans-serif}
 .ic{min-height:44px;min-width:44px;border:0;background:var(--soft);border-radius:12px;cursor:pointer;font-weight:500;color:var(--ink);padding:0 12px}
 .tot{display:flex;justify-content:space-between;align-items:center;background:var(--pri);color:var(--priInk);border-radius:16px;padding:14px 18px;font-weight:600}
 .tot b{font-size:28px;color:var(--acc)}
@@ -569,7 +569,7 @@ async function drawSchedule(mode){
   const t=theme(),V=t.v,C=S.courses,ses=C.flatMap(c=>c.sessions),SC=2;
   let lo=8*60,hi=17*60;ses.forEach(s=>{lo=Math.min(lo,Math.floor(s.s/60)*60);hi=Math.max(hi,Math.ceil(s.e/60)*60)});
   const days=[0,1,2,3,4].concat([5,6].filter(d=>ses.some(s=>s.d===d))),EN=['MON','TUE','WED','THU','FRI','SAT','SUN'];
-  const F='"IBM Plex Sans Thai",sans-serif',G='"Space Grotesk","IBM Plex Sans Thai",sans-serif';
+  const F='"Sarabun",sans-serif',G='"Space Grotesk","Sarabun",sans-serif';
   const pal=(c,d)=>t.pal[(byDay()?d:c.color)%8];
   const room=r=>/^contact\s*teacher$/i.test(r||'')?'ติดต่อผู้สอน':(r||'');
   const land=mode==='land',W=land?1800:1080,PAD=land?56:48;
