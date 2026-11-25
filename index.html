@@ -324,9 +324,10 @@ const THEMES={
  charcoal:{n:'ถ่าน',g:1,dark:1,by:'course',v:CH('#0a0a0b','#121214','#f4f4f5','#8b8b94','#222226','#18181b','#f4f4f5','#111','#f4f4f5','#111','#18181b','#fafafa','#8b8b94','#151517','#19191c'),
   pal:[['#1f1f23','#f4f4f5','#a1a1aa'],['#27272c','#f4f4f5','#d4d4d8'],['#1c1c20','#e4e4e7','#71717a'],['#2a2a2f','#f4f4f5','#a1a1aa'],['#222226','#f4f4f5','#d4d4d8'],['#2e2e33','#f4f4f5','#a1a1aa'],['#1a1a1e','#e4e4e7','#71717a'],['#25252a','#f4f4f5','#d4d4d8']]}
 };
-let S={term:'',courses:[],theme:'',colorBy:''};
+let S={term:'',courses:[],theme:'thaiday',colorBy:''};
 try{const raw=localStorage.getItem('kutable.v2')||localStorage.getItem('kutable.v1');if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
 if(!Array.isArray(S.courses))S.courses=[];
+if(S.themeV!==2){S.theme='thaiday';S.colorBy='';S.themeV=2}
 if(!THEMES[S.theme])S.theme='';
 S.courses.forEach((c,i)=>{if(typeof c.color!=='number')c.color=i%8});
 const save=()=>{try{localStorage.setItem('kutable.v2',JSON.stringify(S))}catch(e){}};
