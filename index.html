@@ -111,6 +111,11 @@ body.dv .dayv{display:block}body.dv .week{display:none}
 .ev .n{font-size:14px}
 .ev .m{font-size:12px;opacity:.78}
 .ev span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.sh{padding:5px 7px;gap:1px;justify-content:flex-start;padding-top:7px}
+.ev.sh .c{font-size:13px}.ev.sh .n{font-size:12px;line-height:1.45;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:none}.ev.sh .m{font-size:11px;letter-spacing:-.01em}
+.tip{position:fixed;z-index:40;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;white-space:pre-line;max-width:280px;box-shadow:0 12px 30px -10px #0006;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tip.show{opacity:1;transform:none}.tip b{font-size:14px}
+
 .ev.clash{border-color:var(--bad);border-style:dashed}
 .nowl{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);z-index:0;pointer-events:none}.nowl::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
 .empty{padding:56px 20px;text-align:center;color:var(--mute)}
@@ -492,11 +497,12 @@ function render(){
     days.forEach(d=>{
       const items=[];C.forEach(c=>c.sessions.forEach((s,i)=>{if(s.d===d)items.push({c,s,i})}));items.sort((a,b)=>a.s.s-b.s.s);
       const lanes=[];items.forEach(it=>{let l=lanes.findIndex(e=>e<=it.s.s);if(l<0){l=lanes.length;lanes.push(0)}lanes[l]=it.s.e;it.l=l});
-      const big=matchMedia('(max-width:1000px)').matches,L=Math.max(1,lanes.length),RH=L>1?L*(big?88:72)+8:(big?104:84),lh=(RH-8)/L;
+      const big=matchMedia('(max-width:1000px)').matches,L=Math.max(1,lanes.length),RH=L>1?L*(big?92:84)+8:(big?108:96),lh=(RH-8)/L;
       w+=`<div class="wr"><div class="wd${d===today?' today':''}"><span>${EN[d]}</span></div><div class="lane${d===today?' today':''}" style="--rh:${RH}px">`;
       items.forEach(it=>{const {c,s}=it,cl=set.has(c.id+':'+it.i);
         const meta=[`${fm(s.s)}–${fm(s.e)}`,roomTxt(s.room)||(s.kind==='ปฏิบัติ'?'แล็บ':s.kind),c.sec?'sec '+c.sec:''].filter(Boolean).join(' · ');
-        w+=`<button class="ev${cl?' clash':''}" data-id="${esc(c.id)}" data-k="${esc(c.id)}" style="${cvFor(c,d)};left:calc(${(s.s-lo)/span*100}% + 5px);width:calc(${(s.e-s.s)/span*100}% - 10px);top:${4+it.l*lh}px;height:${lh-8}px" title="${esc(c.code+' '+c.name+' · '+meta)}"><span class="c">${esc(key(c.code)||c.code)}</span><span class="n">${esc(c.name||'')}</span><span class="m num">${esc(meta)}</span></button>`});
+        const sh=(s.e-s.s)<=75,tip=[c.code,c.name,`${DAYS[d]} ${fm(s.s)}–${fm(s.e)}`,roomTxt(s.room)?'ห้อง '+roomTxt(s.room):'',c.sec?'sec '+c.sec:'',s.kind].filter(Boolean).join('\n');
+        w+=`<button class="ev${cl?' clash':''}${sh?' sh':''}" data-id="${esc(c.id)}" data-k="${esc(c.id)}" data-tip="${esc(tip)}" style="${cvFor(c,d)};left:calc(${(s.s-lo)/span*100}% + ${sh?3:5}px);width:calc(${(s.e-s.s)/span*100}% - ${sh?6:10}px);top:${4+it.l*lh}px;height:${lh-8}px" aria-label="${esc(tip.replace(/\n/g,' · '))}"><span class="c">${esc(key(c.code)||c.code)}</span><span class="n">${esc(c.name||'')}</span><span class="m num">${esc(sh?`${fm(s.s).replace(/^0/,'')}–${fm(s.e).replace(/^0/,'')}`:meta)}</span></button>`});
       if(d===today&&nm>lo&&nm<hi)w+=`<div class="nowl" style="left:${(nm-lo)/span*100}%"></div>`;
       w+='</div></div>'});
     $('week').innerHTML=w+'</div>';
@@ -626,6 +632,14 @@ let DLNS=null;try{if(window.claude&&typeof claude.use==='function')claude.use('d
 $('xDl').addEventListener('click',async e=>{if(!expBlob){e.preventDefault();return}if(!DLNS)return;e.preventDefault();
   try{await DLNS.save({filename:$('xDl').download,data:expBlob});toast('บันทึกรูปแล้ว')}catch(err){if(err&&err.code!=='declined')toast('บันทึกไม่ได้ในหน้านี้ ลองกดค้างหรือคลิกขวาที่รูปแทน')}});
 $('xShare').onclick=async()=>{try{await navigator.share({files:[new File([expBlob],$('xDl').download,{type:'image/png'})],title:'ตารางเรียน'})}catch(e){}};
+const tipEl=document.createElement('div');tipEl.className='tip';tipEl.setAttribute('aria-hidden','true');document.body.appendChild(tipEl);
+const fine=matchMedia('(hover:hover) and (pointer:fine)');
+$('week').addEventListener('mouseover',e=>{const b=e.target.closest('.ev');if(!b||!fine.matches)return;const L=b.dataset.tip.split('\n');
+  tipEl.innerHTML='<b>'+esc(L[1]||L[0])+'</b><br>'+L.filter((x,i)=>i!==1).map(esc).join('<br>');
+  const r=b.getBoundingClientRect();tipEl.classList.add('show');const tw=tipEl.offsetWidth,th=tipEl.offsetHeight;
+  let x=Math.min(Math.max(8,r.left+r.width/2-tw/2),innerWidth-tw-8),y=r.top-th-8;if(y<8)y=r.bottom+8;tipEl.style.left=x+'px';tipEl.style.top=y+'px'});
+$('week').addEventListener('mouseout',e=>{if(e.target.closest('.ev'))tipEl.classList.remove('show')});
+addEventListener('scroll',()=>tipEl.classList.remove('show'),{passive:true});
 /* editor */
 let edId=null,edCol=0;
 const dayOpts=d=>DAYS.map((n,i)=>`<option value="${i}"${i===d?' selected':''}>${n}</option>`).join('');
