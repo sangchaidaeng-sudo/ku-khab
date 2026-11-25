@@ -212,8 +212,8 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
     <div class="two">
       <div class="card">
         <h2>วางจาก MyKU หรือคำตอบจาก AI</h2>
-        <p class="hint">ใช้หน้า “ผลการลงทะเบียน” ใน MyKU เพราะมีวันเวลาเรียนครบ ลากคลุมแล้วคัดลอกมาวาง หรือถ่ายรูปหน้าจอไปให้ AI แปลงตามขั้นตอนด้านขวา วิชาที่รหัสซ้ำกับของเดิมจะถูกแทนที่</p>
-        <textarea id="paste" placeholder="02037471-66  Principles of ...  Credit 3  Sec 700  Mon 09:00-10:00  LH3-306"></textarea>
+        <p class="hint">คัดลอกจากหน้า “ผลการลงทะเบียน” ใน MyKU (มีวันเวลาเรียนครบ) หรือจากโน้ตที่จดไว้ก็ได้ ขอแค่มีรหัสวิชา ชื่อวิชา วัน เวลา วิชาที่รหัสซ้ำกับของเดิมจะถูกแทนที่</p>
+        <textarea id="paste" placeholder="ตัวอย่าง&#10;02036281-66 โรคพืชวิทยาเบื้องต้น(3)&#10;บรรยาย หมู่ 700&#10;MON 13:00 - 14:00 ห้อง LH4-102&#10;ปฏิบัติ หมู่ 715&#10;FRI 13:00 - 16:00 ห้อง ติดต่อผู้สอน"></textarea>
         <div class="bar" style="margin-top:12px"><button class="b p" id="go">สร้างตาราง</button><button class="b" id="demo">ลองข้อมูลตัวอย่าง</button><button class="b" id="clearPaste">ล้างช่องนี้</button></div>
         <div class="msg" id="msg"></div>
       </div>
@@ -221,11 +221,11 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
         <h2>แยกข้อความไม่ถูก? ให้ AI ช่วย</h2>
         <ol class="steps">
           <li>กด “คัดลอก prompt”</li>
-          <li>เปิด Claude, ChatGPT หรือ Gemini วาง prompt แล้ว<b>แนบรูปหน้าจอ</b>หน้า “ผลการลงทะเบียน” ใน MyKU (หลายรูปได้) หรือวางข้อความต่อท้าย</li>
+          <li>เปิด Claude, ChatGPT หรือ Gemini วาง prompt แล้ววางข้อความที่คัดลอกจาก MyKU ต่อท้าย</li>
           <li>คัดลอกคำตอบของ AI มาวางในช่องด้านซ้าย แล้วกด “สร้างตาราง”</li>
         </ol>
         <button class="b a" id="cpPrompt">คัดลอก prompt</button>
-        <textarea id="promptTxt" readonly aria-label="prompt สำหรับ AI">ช่วยแปลงตารางเรียนจากระบบ MyKU ของมหาวิทยาลัยเกษตรศาสตร์ ที่ฉันแนบมา (เป็นรูปภาพหน้าจอ หรือข้อความที่คัดลอกมา) ให้เป็น JSON ตามรูปแบบนี้เท่านั้น ห้ามมีคำอธิบายหรือข้อความอื่น
+        <textarea id="promptTxt" readonly aria-label="prompt สำหรับ AI">ช่วยแปลงตารางเรียนจากระบบ MyKU ของมหาวิทยาลัยเกษตรศาสตร์ ด้านล่างนี้ ให้เป็น JSON ตามรูปแบบนี้เท่านั้น ห้ามมีคำอธิบายหรือข้อความอื่น
 
 [
   {
@@ -243,7 +243,7 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
 ]
 
 กติกา:
-- อ่านทุกวิชาในรูปหรือข้อความ ห้ามข้ามวิชาใด
+- อ่านทุกวิชาในข้อความ ห้ามข้ามวิชาใด
 - day ใช้ MON TUE WED THU FRI SAT SUN
 - เวลาเป็นแบบ 24 ชั่วโมง HH:MM
 - type ใช้ "บรรยาย" หรือ "ปฏิบัติ" ถ้าไม่รู้ให้เป็น ""
@@ -372,9 +372,10 @@ function parse(text){
       if(d<0||e<=s)continue;
       const after=blk.slice(SESRX.lastIndex,SESRX.lastIndex+40);
       let room='';const rm=/^[\s,|\/]*(?:ห้อง|room)?\s*[:.]?\s*([A-Za-zก-๙.]*\d[\w.\-ก-๙]*)/i.exec(after);
+      if(/^[\s,|\/]*(?:ห้อง|room)?\s*[:.]?\s*(?:ติดต่อผู้สอน|contact\s*teacher)/i.test(after))room='ติดต่อผู้สอน';else
       if(rm&&!/^\d{1,2}[:.]\d{2}$/.test(rm[1])&&!/^\d{8}/.test(rm[1]))room=rm[1];
-      const before=blk.slice(Math.max(0,sm.index-30),sm.index);
-      const kind=/ปฏิบัติ|lab/i.test(before)?'ปฏิบัติ':/บรรยาย|lec/i.test(before)?'บรรยาย':'';
+      const kws=[...blk.slice(0,sm.index).matchAll(/ปฏิบัติ|บรรยาย|\blab\b|\blec(?:ture)?\b/gi)],kw=kws.length?kws[kws.length-1][0]:'';
+      const kind=/ปฏิบัติ|lab/i.test(kw)?'ปฏิบัติ':/บรรยาย|lec/i.test(kw)?'บรรยาย':'';
       sessions.push({d,s,e,room,kind});
     }
     const LABEL=/^(?:credits?|หน่วยกิต|sec(?:tion)?|หมู่|กลุ่ม|lecture|lab(?:oratory)?|lec|บรรยาย|ปฏิบัติ|room|ห้อง|type|ประเภท|day|วัน|time|เวลา|instructor|อาจารย์|ผู้สอน|status|สถานะ|campus|วิทยาเขต|registered|ลงทะเบียน|course|วิชา|subject|name|ชื่อวิชา|no\.?|ลำดับ)(?![A-Za-z])\s*[:.]?\s*/i;
@@ -385,14 +386,15 @@ function parse(text){
       sg=sg.replace(/\d\s*\(\s*\d+\s*-\s*\d+\s*-\s*\d+\s*\)/g,' ');
       const dt=dayTime.exec(sg);if(dt)sg=sg.slice(0,dt.index);
       let prev;do{prev=sg;sg=sg.replace(LABEL,'').replace(/^[\d.,()\/\-\s]+(?=\S)/,'').trim()}while(sg!==prev);
+      sg=sg.replace(/\s*\(\s*\d{1,2}\s*\)\s*$/,'');
       sg=sg.replace(/\s*(?:หมู่|sec(?:tion)?|credits?|หน่วยกิต)(?![A-Za-z]).*$/i,'').replace(/[\s\-–|,:]+$/,'').trim();
       if(!/[A-Za-zก-๙]{3}/.test(sg))continue;
       if(/^[A-Za-zก-๙.]{0,6}\.?\s?\d{1,3}-\d{2,4}\w*$/.test(sg))continue;
       if(/^(?:lecture|lab|บรรยาย|ปฏิบัติ|credits?|หน่วยกิต|sec(?:tion)?|หมู่|room|ห้อง|mon|tue|wed|thu|fri|sat|sun|tba|-)$/i.test(sg))continue;
       name=sg;break;
     }
-    const cr=/(\d)\s*\(\s*\d+\s*-\s*\d+\s*-\s*\d+\s*\)/.exec(blk)||/(?:credits?|หน่วยกิต)\s*[:.]?\s*(\d{1,2})(?![\d:])/i.exec(blk)||/(?<![\d:])(\d{1,2})\s*(?:credits?|หน่วยกิต)/i.exec(blk);
-    const secs=[...blk.matchAll(/(?:หมู่|sec(?:tion)?|กลุ่ม)\s*[:.]?\s*(\d{1,3})/gi)].map(x=>x[1]);
+    const cr=/(\d)\s*\(\s*\d+\s*-\s*\d+\s*-\s*\d+\s*\)/.exec(blk)||/[ก-๙A-Za-z)]\s*\(\s*(\d{1,2})\s*\)/.exec(blk)||/(?:credits?|หน่วยกิต)\s*[:.]?\s*(\d{1,2})(?![\d:])/i.exec(blk)||/(?<![\d:])(\d{1,2})\s*(?:credits?|หน่วยกิต)/i.exec(blk);
+    const secs=[...blk.matchAll(/(?:หมู่|sec(?:tion)?|กลุ่ม|\blab\b|\blecture\b)\s*(?:บรรยาย|ปฏิบัติ)?\s*[:.]?\s*(\d{3})(?![\d:.])/gi)].map(x=>x[1]);
     const prev=out.find(o=>key(o.code)===key(h.code));
     if(prev){prev.sessions.push(...sessions);secs.forEach(x=>{if(!prev.sec.split('/').includes(x))prev.sec+=(prev.sec?'/':'')+x});if(!prev.name&&name)prev.name=name;return}
     const c={id:uid(),code:h.code,name,credits:cr?+cr[1]:'',sec:[...new Set(secs)].join('/'),sessions};
