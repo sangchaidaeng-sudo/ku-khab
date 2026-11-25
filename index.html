@@ -212,7 +212,7 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
     <div class="two">
       <div class="card">
         <h2>วางจาก MyKU หรือคำตอบจาก AI</h2>
-        <p class="hint">เปิดตารางเรียนใน MyKU ลากคลุมทั้งตาราง คัดลอก แล้ววางที่นี่ วิชาที่รหัสซ้ำกับของเดิมจะถูกแทนที่</p>
+        <p class="hint">ใช้หน้า “ผลการลงทะเบียน” ใน MyKU เพราะมีวันเวลาเรียนครบ ลากคลุมแล้วคัดลอกมาวาง หรือถ่ายรูปหน้าจอไปให้ AI แปลงตามขั้นตอนด้านขวา วิชาที่รหัสซ้ำกับของเดิมจะถูกแทนที่</p>
         <textarea id="paste" placeholder="02037471-66  Principles of ...  Credit 3  Sec 700  Mon 09:00-10:00  LH3-306"></textarea>
         <div class="bar" style="margin-top:12px"><button class="b p" id="go">สร้างตาราง</button><button class="b" id="demo">ลองข้อมูลตัวอย่าง</button><button class="b" id="clearPaste">ล้างช่องนี้</button></div>
         <div class="msg" id="msg"></div>
@@ -221,33 +221,40 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
         <h2>แยกข้อความไม่ถูก? ให้ AI ช่วย</h2>
         <ol class="steps">
           <li>กด “คัดลอก prompt”</li>
-          <li>เปิด Claude, ChatGPT หรือ Gemini วาง prompt แล้ววางข้อความจาก MyKU ต่อท้าย</li>
+          <li>เปิด Claude, ChatGPT หรือ Gemini วาง prompt แล้ว<b>แนบรูปหน้าจอ</b>หน้า “ผลการลงทะเบียน” ใน MyKU (หลายรูปได้) หรือวางข้อความต่อท้าย</li>
           <li>คัดลอกคำตอบของ AI มาวางในช่องด้านซ้าย แล้วกด “สร้างตาราง”</li>
         </ol>
         <button class="b a" id="cpPrompt">คัดลอก prompt</button>
-        <textarea id="promptTxt" readonly aria-label="prompt สำหรับ AI">ช่วยแปลงข้อความตารางเรียนจากระบบ MyKU ของมหาวิทยาลัยเกษตรศาสตร์ด้านล่างนี้ ให้เป็น JSON ตามรูปแบบนี้เท่านั้น ห้ามมีคำอธิบายหรือข้อความอื่น
+        <textarea id="promptTxt" readonly aria-label="prompt สำหรับ AI">ช่วยแปลงตารางเรียนจากระบบ MyKU ของมหาวิทยาลัยเกษตรศาสตร์ ที่ฉันแนบมา (เป็นรูปภาพหน้าจอ หรือข้อความที่คัดลอกมา) ให้เป็น JSON ตามรูปแบบนี้เท่านั้น ห้ามมีคำอธิบายหรือข้อความอื่น
 
 [
   {
     "code": "รหัสวิชาพร้อมเลขท้าย เช่น 02037471-66",
-    "name": "ชื่อวิชา (ภาษาตามต้นฉบับ)",
+    "name": "ชื่อวิชา ใช้ชื่อภาษาไทยถ้ามี",
     "credits": 3,
-    "sec": "หมู่เรียน เช่น 800 หรือ 800/850",
+    "sec": "หมู่เรียน เช่น 700 หรือ 700/711",
     "sessions": [
       { "day": "MON", "start": "09:00", "end": "12:00", "room": "LH4-201", "type": "บรรยาย" }
+    ],
+    "exams": [
+      { "kind": "กลางภาค", "date": "17/01/2570", "start": "16:30", "end": "19:30" }
     ]
   }
 ]
 
 กติกา:
+- อ่านทุกวิชาในรูปหรือข้อความ ห้ามข้ามวิชาใด
 - day ใช้ MON TUE WED THU FRI SAT SUN
 - เวลาเป็นแบบ 24 ชั่วโมง HH:MM
 - type ใช้ "บรรยาย" หรือ "ปฏิบัติ" ถ้าไม่รู้ให้เป็น ""
+- credits คือหน่วยกิตรวมของวิชา (บรรยาย + ปฏิบัติ)
 - วิชาที่มีทั้งบรรยายและปฏิบัติ ให้รวมเป็นวิชาเดียว มีหลาย sessions
+- ห้องที่เขียนว่า "ติดต่อผู้สอน" หรือ "Contact Teacher" ให้ใส่ room เป็น "ติดต่อผู้สอน"
+- exams ใส่วันสอบกลางภาค/ปลายภาคถ้ามี (kind เป็น "กลางภาค" หรือ "ปลายภาค") ถ้าไม่มีให้เป็น []
 - ถ้าไม่มีข้อมูลช่องไหน ให้เป็น "" (credits ให้เป็น null) ห้ามเดา
 - วิชาที่ไม่มีวันเวลาเรียน ให้ sessions เป็น []
 
-ข้อความจาก MyKU:
+ตารางเรียนจาก MyKU:
 </textarea>
       </div>
     </div>
@@ -408,7 +415,8 @@ function fromJSON(t){
     const cm=/(\d{8})(-\d{2})?/.exec(String(x.code??''));const code=cm?cm[0]:String(x.code??'').trim();
     const sessions=(Array.isArray(x.sessions)?x.sessions:[]).map(z=>({d:dayIdx(String(z.day??'')),s:pm(z.start??''),e:pm(z.end??''),room:String(z.room??'').trim(),kind:/ปฏิบัติ|lab/i.test(z.type??'')?'ปฏิบัติ':/บรรยาย|lec/i.test(z.type??'')?'บรรยาย':''})).filter(z=>z.d>=0&&!isNaN(z.s)&&!isNaN(z.e)&&z.e>z.s);
     const cr=Number(x.credits);
-    const c={id:uid(),code,name:String(x.name??'').trim(),credits:Number.isFinite(cr)&&x.credits!==null&&x.credits!==''?cr:'',sec:String(x.sec??'').trim(),sessions};
+    const exams=(Array.isArray(x.exams)?x.exams:[]).map(z=>({kind:String(z.kind??'').trim(),date:String(z.date??'').trim(),start:String(z.start??'').trim(),end:String(z.end??'').trim()})).filter(z=>z.date);
+    const c={id:uid(),exams,code,name:String(x.name??'').trim(),credits:Number.isFinite(cr)&&x.credits!==null&&x.credits!==''?cr:'',sec:String(x.sec??'').trim(),sessions};
     if(!c.code&&!c.name)return;courses.push(c);if(!sessions.length)noTime.push(c.code||c.name)});
   return {courses,noTime};
 }
