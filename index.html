@@ -66,7 +66,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .st{background:var(--sf);border:1px solid var(--line);border-radius:999px;padding:4px 12px;display:flex;align-items:baseline;gap:5px;font-size:13px;color:var(--mute);white-space:nowrap}
 .st b{font-size:15px;color:var(--ink)}.st.bad{border-color:var(--bad);color:var(--bad)}.st.bad b{color:var(--bad)}
 .term{border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--mute);font-size:16px;padding:4px 2px;width:min(320px,100%);margin-bottom:4px}
-.xb{margin-left:auto;min-height:42px}
+.xb{min-height:42px}.sb{margin-left:auto}
 .vseg{display:flex;background:var(--soft);border-radius:12px;padding:3px}
 .vseg button{border:0;background:transparent;border-radius:9px;min-height:36px;padding:0 14px;cursor:pointer;font-weight:500;color:color-mix(in srgb,var(--ink) 74%,var(--soft));font-size:14px}
 .vseg button.on{background:var(--sf);color:var(--ink);box-shadow:0 1px 3px #0002}
@@ -79,6 +79,17 @@ a.b{text-decoration:none}
 .about{border-top:1px solid var(--line);margin-top:8px;padding:18px 0 6px;color:var(--mute);font-size:14px;max-width:760px}
 .about h2{font-size:16px;color:var(--ink);margin:0 0 6px}.about p{margin:0 0 8px}
 .about details{border-top:1px dashed var(--line);padding:6px 0}.about summary{cursor:pointer;color:var(--ink);min-height:36px;display:flex;align-items:center}
+.vbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin-bottom:12px}
+body.viewing .vbar{display:flex}.vbar b{font-size:18px;display:block;color:var(--ink)}.vbar small{color:var(--mute);font-size:14px}
+body.viewing .sb{display:none}
+.shmd{width:min(680px,100%)}
+.shgrid{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;align-items:start;margin:10px 0 6px}
+.shqr{background:#fff;border-radius:14px;padding:10px;border:1px solid var(--line);aspect-ratio:1;display:grid;place-items:center;text-align:center}
+.shqr svg{width:100%;height:auto;display:block}
+.shside{display:grid;gap:10px}.shl{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+#shLink{font-size:14px;color:var(--mute)}
+.shbk{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.shbk b{display:block;margin-bottom:2px}
+@media(max-width:560px){.shgrid{grid-template-columns:minmax(0,1fr)}.shqr{width:min(240px,100%);justify-self:center}}
 /* day view */
 .dayv{display:none;margin-bottom:24px}
 body.dv .dayv{display:block}body.dv .week{display:none}
@@ -182,7 +193,7 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
  .board{grid-template-columns:minmax(0,1fr) auto;padding:12px 16px 14px;border-radius:16px}
  .board .lbl{grid-row:auto;justify-self:start;margin-bottom:4px}.bn{font-size:18px}.bm{font-size:13px}
  .cd{grid-row:1/4;grid-column:2;flex-direction:column;align-items:flex-end;gap:0}.cd .big{font-size:30px}
- .vseg{margin-left:0;order:5;flex:1 1 calc(100% - 64px)}.vseg button{flex:1}.xb span{display:none}.xb{padding:0 12px;order:6;margin-left:0}.xmd .vseg{flex:none;width:100%}
+ .vseg{margin-left:0;order:5;flex:1 1 calc(100% - 64px)}.vseg button{flex:1}.xb span{display:none}.xb{padding:0 12px;order:6;margin-left:0}.sb{order:6}.xmd .vseg{flex:none;width:100%}
  .bn{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
  .tm{margin-left:auto}
  .wg{min-width:760px}
@@ -213,6 +224,7 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
 <main id="main">
   <section class="view" id="v-week" aria-labelledby="wh1">
     <h1 id="wh1" class="sr">ตารางเรียนของฉัน</h1>
+    <div class="vbar" id="vbar"><div><b id="vbName">ตารางของเพื่อน</b><small id="vbTerm"></small></div><div class="bar"><button class="b" id="vbBack">กลับไปตารางของฉัน</button><button class="b p" id="vbUse">ใช้เป็นตารางของฉัน</button></div></div>
     <div class="board" id="board" aria-live="polite"></div>
     <div class="tbar" id="tbar"></div>
     <div class="dayv" id="dayv"></div>
@@ -314,6 +326,22 @@ footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
   <p class="hint" style="margin-top:10px">ถ้ากดดาวน์โหลดแล้วไม่มีอะไรเกิดขึ้น: บนมือถือให้กดค้างที่รูปแล้วเลือก “บันทึกรูปภาพ” บนคอมให้คลิกขวาที่รูปแล้วเลือก “บันทึกรูปภาพเป็น…”</p>
   <div class="bar" style="justify-content:flex-end"><button class="b" id="xClose">ปิด</button><button class="b" id="xShare" hidden>แชร์</button><a class="b p" id="xDl" href="#">ดาวน์โหลด PNG</a></div>
 </div></div>
+<div class="ov" id="sov" role="dialog" aria-modal="true" aria-labelledby="sht"><div class="md shmd">
+  <h2 id="sht">แชร์ตารางเรียน</h2>
+  <p class="hint">ข้อมูลตารางอยู่ในลิงก์นี้ทั้งหมด ไม่ได้เก็บบนเซิร์ฟเวอร์ เพื่อนเปิดลิงก์แล้วดูตารางของคุณได้ทันที ถ้าแก้ตารางทีหลัง ต้องแชร์ลิงก์ใหม่</p>
+  <div class="shgrid">
+    <div class="shqr" id="shQR" aria-label="QR code ของลิงก์ตาราง"></div>
+    <div class="shside">
+      <label class="shl">ชื่อที่จะโชว์ให้เพื่อนเห็น<input class="f" id="shName" maxlength="40" placeholder="เช่น แดง"></label>
+      <label class="shl">ลิงก์ตาราง<input class="f" id="shLink" readonly></label>
+      <small class="hint" id="shLen" style="color:var(--bad)"></small>
+      <div class="bar"><button class="b p" id="shCopy">คัดลอกลิงก์</button><button class="b" id="shNative" hidden>แชร์ไปแอปอื่น</button></div>
+    </div>
+  </div>
+  <div class="shbk"><b>สำรองตาราง</b><p class="hint">ลิงก์ด้านบนใช้เป็นตัวสำรองได้ ส่งเข้า LINE หรือเก็บในโน้ตของตัวเองไว้ ถ้าเปลี่ยนมือถือหรือล้างเบราว์เซอร์ ให้เปิดลิงก์นั้นแล้วกด “ใช้เป็นตารางของฉัน” หรือเก็บเป็นไฟล์ แล้ววางเนื้อหาในไฟล์ที่หน้านำเข้า</p>
+  <button class="b" id="shFile">ดาวน์โหลดไฟล์สำรอง (.json)</button></div>
+  <div class="bar" style="justify-content:flex-end;margin-top:14px"><button class="b" id="shClose">ปิด</button></div>
+</div></div>
 <div class="toast" id="toast" role="status"><span id="tmsg"></span><button id="undo">เลิกทำ</button></div>
 
 <script>
@@ -359,7 +387,8 @@ if(!Array.isArray(S.courses))S.courses=[];
 if(S.themeV!==2){S.theme='thaiday';S.colorBy='';S.themeV=2}
 if(!THEMES[S.theme])S.theme='';
 S.courses.forEach((c,i)=>{if(typeof c.color!=='number')c.color=i%8});
-const save=()=>{try{localStorage.setItem('kutable.v2',JSON.stringify(S))}catch(e){}};
+var VIEW=null,MINE=null;
+const save=()=>{const c=S.courses;if(VIEW)S.courses=MINE;try{localStorage.setItem('kutable.v2',JSON.stringify(S))}catch(e){}finally{S.courses=c}};
 const sysDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
 const theme=()=>THEMES[S.theme]||(sysDark()?THEMES.forest:THEMES.leaf);
 const byDay=()=>(S.colorBy||theme().by)==='day';
@@ -501,7 +530,7 @@ function render(){
   const cr=C.reduce((a,c)=>a+(+c.credits||0),0);
   const narrow=matchMedia('(max-width:699px)').matches,vw=S.vw||(narrow?'day':'week');
   document.body.classList.toggle('dv',vw==='day'&&ses.length>0);
-  $('tbar').innerHTML=`<span class="st"><b class="num">${C.length}</b>วิชา</span><span class="st"><b class="num">${cr}</b>หน่วยกิต</span><span class="st"><b class="num">${(ses.reduce((a,s)=>a+s.e-s.s,0)/60).toFixed(1).replace('.0','')}</b>ชม./สัปดาห์</span>`+(pairs.size?`<span class="st bad"><b class="num">${pairs.size}</b>คู่เวลาชน</span>`:'')+(ses.length?`<button class="b xb" data-act="export" aria-label="บันทึกตารางเป็นรูป"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>บันทึกรูป</span></button><div class="vseg" role="group" aria-label="มุมมอง"><button data-vw="day" class="${vw==='day'?'on':''}" aria-pressed="${vw==='day'}">รายวัน</button><button data-vw="week" class="${vw==='week'?'on':''}" aria-pressed="${vw==='week'}">ทั้งสัปดาห์</button></div>`:'');
+  $('tbar').innerHTML=`<span class="st"><b class="num">${C.length}</b>วิชา</span><span class="st"><b class="num">${cr}</b>หน่วยกิต</span><span class="st"><b class="num">${(ses.reduce((a,s)=>a+s.e-s.s,0)/60).toFixed(1).replace('.0','')}</b>ชม./สัปดาห์</span>`+(pairs.size?`<span class="st bad"><b class="num">${pairs.size}</b>คู่เวลาชน</span>`:'')+(ses.length?`<button class="b xb sb" data-act="share" aria-label="แชร์ตาราง"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>แชร์</span></button><button class="b xb" data-act="export" aria-label="บันทึกตารางเป็นรูป"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>บันทึกรูป</span></button><div class="vseg" role="group" aria-label="มุมมอง"><button data-vw="day" class="${vw==='day'?'on':''}" aria-pressed="${vw==='day'}">รายวัน</button><button data-vw="week" class="${vw==='week'?'on':''}" aria-pressed="${vw==='week'}">ทั้งสัปดาห์</button></div>`:'');
   dayView(today,nm,set);
   if(!ses.length){$('week').innerHTML=`<div class="empty">ตารางยังว่าง<br><button class="b p" id="eGo">นำเข้าวิชาจาก MyKU</button></div>`;$('eGo').onclick=()=>go('import')}
   else{
@@ -534,6 +563,8 @@ function snap(){undoState=JSON.stringify(S.courses);undoPaste=null}
 $('undo').onclick=()=>{if(undoState){S.courses=JSON.parse(undoState);undoState=null;if(undoPaste!==null){$('paste').value=undoPaste;undoPaste=null}save();render()}$('toast').classList.remove('show')};
 function msg(html,warn){const m=$('msg');m.innerHTML=html;m.className='msg show'+(warn?' warn':'')}
 function importText(t){
+  const tk=tokFrom(t);if(tk){enterView(tk);return}
+  if(VIEW)exitView(false);
   const {courses,noTime}=fromJSON(t)||parse(t);
   if(!courses.length){msg('ไม่พบรหัสวิชา 8 หลักในข้อความ ลองคัดลอกให้ติดคอลัมน์รหัสวิชามาด้วย หรือใช้ prompt ให้ AI ช่วย',true);return}
   snap();const used=new Set(S.courses.map(c=>c.color));
@@ -557,7 +588,7 @@ const DEMO=`ตัวอย่าง (ไม่ใช่ข้อมูลจร
 $('demo').onclick=()=>{$('paste').value=DEMO;importText(DEMO)};
 $('clear').onclick=()=>{if(!S.courses.length&&!$('paste').value)return;snap();undoPaste=$('paste').value;S.courses=[];save();render();$('paste').value='';$('msg').className='msg';toast('ล้างตารางและช่องวางข้อความแล้ว',true)};
 $('thBtn').onclick=e=>{e.stopPropagation();$('pop').classList.toggle('show')};
-$('pop').onclick=e=>{e.stopPropagation();const b=e.target.closest('[data-th]'),cb=e.target.closest('[data-cb]');if(cb){S.colorBy=cb.dataset.cb;save();applyTheme();render();return}if(!b)return;S.theme=b.dataset.th;S.colorBy='';save();applyTheme();render()};
+$('pop').onclick=e=>{e.stopPropagation();const b=e.target.closest('[data-th]'),cb=e.target.closest('[data-cb]');if(cb){S.colorBy=cb.dataset.cb;save();applyTheme();render();return}if(!b)return;S.theme=b.dataset.th;S.colorBy='';save();applyTheme();render();$('pop').classList.remove('show')};
 document.addEventListener('click',e=>{if(!e.target.closest('.tm'))$('pop').classList.remove('show');const b=e.target.closest('[data-id]');if(b&&!b.closest('.md'))openEd(b.dataset.id)});
 
 const hl=(id,on)=>document.querySelectorAll('.ev[data-k="'+CSS.escape(id)+'"]').forEach(e=>e.classList.toggle('hl',on));
@@ -656,6 +687,69 @@ $('week').addEventListener('mouseover',e=>{const b=e.target.closest('.ev');if(!b
   let x=Math.min(Math.max(8,r.left+r.width/2-tw/2),innerWidth-tw-8),y=r.top-th-8;if(y<8)y=r.bottom+8;tipEl.style.left=x+'px';tipEl.style.top=y+'px'});
 $('week').addEventListener('mouseout',e=>{if(e.target.closest('.ev'))tipEl.classList.remove('show')});
 addEventListener('scroll',()=>tipEl.classList.remove('show'),{passive:true});
+/* share + backup */
+const SITE='https://ku-khab.vercel.app/';
+const KIND=['','บรรยาย','ปฏิบัติ'];
+const b64u={enc:u8=>{let s='';u8.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')},
+  dec:t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}};
+const pack=(courses,name)=>({v:1,n:name||'',t:S.term||'',c:courses.map(c=>[c.code,c.name||'',c.credits===''?null:c.credits,c.sec||'',c.sessions.map(s=>[s.d,s.s,s.e,s.room||'',Math.max(0,KIND.indexOf(s.kind||''))]),c.color??0,(c.exams||[]).map(x=>[x.kind,x.date,x.start,x.end])])});
+const unpack=o=>({name:String(o.n||'').slice(0,40),term:String(o.t||'').slice(0,60),courses:(Array.isArray(o.c)?o.c:[]).slice(0,40).map(a=>({id:uid(),code:String(a[0]||'').slice(0,20),name:String(a[1]||'').slice(0,120),credits:a[2]==null?'':Number(a[2])||0,sec:String(a[3]||'').slice(0,30),
+  sessions:(Array.isArray(a[4])?a[4]:[]).slice(0,30).map(s=>({d:+s[0],s:+s[1],e:+s[2],room:String(s[3]||'').slice(0,40),kind:KIND[+s[4]]||''})).filter(s=>s.d>=0&&s.d<7&&s.e>s.s&&s.s>=0&&s.e<=1440),
+  color:(+a[5]||0)%8,exams:(Array.isArray(a[6])?a[6]:[]).slice(0,6).map(x=>({kind:String(x[0]||''),date:String(x[1]||''),start:String(x[2]||''),end:String(x[3]||'')}))}))});
+async function encodeShare(courses,name){
+  const raw=new TextEncoder().encode(JSON.stringify(pack(courses,name)));
+  try{if(typeof CompressionStream==='function'){const z=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());return 'z'+b64u.enc(z)}}catch(e){}
+  return 'j'+b64u.enc(raw);
+}
+async function decodeShare(tok){
+  tok=String(tok||'').trim();const k=tok[0],body=tok.slice(1);let u=b64u.dec(body);
+  if(k==='z'){if(typeof DecompressionStream!=='function')throw new Error('nodecomp');u=new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+  else if(k!=='j')throw new Error('bad');
+  return unpack(JSON.parse(new TextDecoder().decode(u)));
+}
+const tokFrom=t=>{const m=/[?&]t=([zj][A-Za-z0-9_-]+)/.exec(String(t||''));return m?m[1]:null};
+async function saveFile(name,blob){
+  if(DLNS){try{await DLNS.save({filename:name,data:blob});return true}catch(e){if(e&&e.code==='declined')return false}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return true}catch(e){return false}
+}
+const toJSONBackup=()=>JSON.stringify(S.courses.map(c=>({code:c.code,name:c.name,credits:c.credits===''?null:c.credits,sec:c.sec,sessions:c.sessions.map(s=>({day:['MON','TUE','WED','THU','FRI','SAT','SUN'][s.d],start:fm(s.s),end:fm(s.e),room:s.room||'',type:s.kind||''})),exams:c.exams||[]})),null,1);
+let qrLib=null;
+const loadQR=()=>qrLib||(qrLib=new Promise((res,rej)=>{if(window.qrcode)return res(window.qrcode);const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';sc.onload=()=>window.qrcode?res(window.qrcode):rej();sc.onerror=rej;document.head.appendChild(sc)}));
+let shareUrl='';
+async function openShare(){
+  if(!S.courses.length){toast('ยังไม่มีตารางให้แชร์ นำเข้าวิชาก่อนนะ');return}
+  $('shName').value=S.me||'';$('sov').classList.add('show');await refreshShare();
+}
+async function refreshShare(){
+  const tok=await encodeShare(S.courses,$('shName').value.trim());shareUrl=SITE+'?t='+tok;
+  $('shLink').value=shareUrl;$('shLen').textContent=shareUrl.length>1800?'ลิงก์ยาวมาก บางแอปอาจตัดลิงก์ ลองส่งเป็น QR หรือไฟล์แทน':'';
+  const box=$('shQR');box.innerHTML='<span class="hint">กำลังสร้าง QR…</span>';
+  try{const qr=await loadQR();const q=qr(0,'L');q.addData(shareUrl);q.make();box.innerHTML=q.createSvgTag({cellSize:3,margin:2,scalable:true})}catch(e){box.innerHTML='<span class="hint">สร้าง QR ไม่ได้ตอนนี้ ใช้ลิงก์แทนได้เลย</span>'}
+}
+let shT;$('shName').addEventListener('input',()=>{S.me=$('shName').value.trim().slice(0,40);save();clearTimeout(shT);shT=setTimeout(refreshShare,300)});
+$('shCopy').onclick=async()=>{try{await navigator.clipboard.writeText(shareUrl);toast('คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย')}catch(e){$('shLink').focus();$('shLink').select();toast('กด Ctrl/⌘+C เพื่อคัดลอก')}};
+try{if(navigator.share)$('shNative').hidden=false}catch(e){}
+$('shNative').onclick=async()=>{try{await navigator.share({title:'ตารางเรียนของ'+($('shName').value.trim()||'ฉัน'),text:'ดูตารางเรียนของ'+($('shName').value.trim()||'ฉัน')+' บนคาบ',url:shareUrl})}catch(e){}};
+$('shFile').onclick=async()=>{const ok=await saveFile('khab-backup.json',new Blob([toJSONBackup()],{type:'application/json'}));if(ok)toast('บันทึกไฟล์สำรองแล้ว')};
+$('shClose').onclick=()=>$('sov').classList.remove('show');$('sov').onclick=e=>{if(e.target===$('sov'))$('sov').classList.remove('show')};
+document.addEventListener('click',e=>{if(e.target.closest('[data-act=share]'))openShare()});
+
+/* viewing a friend's link */
+VIEW=null;MINE=null;
+async function enterView(tok){
+  let d;try{d=await decodeShare(tok)}catch(e){toast(e&&e.message==='nodecomp'?'เบราว์เซอร์นี้เปิดลิงก์ไม่ได้ ลองอัปเดตเบราว์เซอร์':'ลิงก์ตารางไม่ถูกต้องหรือไม่ครบ');return false}
+  if(!d.courses.length){toast('ลิงก์นี้ไม่มีรายวิชา');return false}
+  MINE=MINE||JSON.parse(JSON.stringify(S.courses));VIEW=d;S.courses=d.courses;document.body.classList.add('viewing');
+  $('vbName').textContent='ตารางของ'+(d.name?' '+d.name:'เพื่อน');$('vbTerm').textContent=[d.term,d.courses.length+' วิชา'].filter(Boolean).join(' · ');
+  go('week');render();return true;
+}
+function exitView(keep){
+  if(!VIEW)return;if(keep){S.courses=VIEW.courses;VIEW=null;MINE=null;save()}else{S.courses=MINE;VIEW=null;MINE=null}
+  document.body.classList.remove('viewing');try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}render();
+}
+$('vbBack').onclick=()=>exitView(false);
+$('vbUse').onclick=()=>{const old=JSON.stringify(MINE||[]);exitView(true);undoState=old;undoPaste=null;toast('ใช้ตารางนี้เป็นตารางของฉันแล้ว',true)};
+
 /* editor */
 let edId=null,edCol=0;
 const dayOpts=d=>DAYS.map((n,i)=>`<option value="${i}"${i===d?' selected':''}>${n}</option>`).join('');
@@ -665,6 +759,7 @@ function sesRow(s){const r=document.createElement('div');r.className='ses';
   r.innerHTML=`<select class="f" aria-label="วัน">${dayOpts(s.d)}</select><input class="f" aria-label="เริ่ม" value="${fm(s.s)}"><input class="f" aria-label="จบ" value="${fm(s.e)}"><input class="f" aria-label="ห้อง" value="${esc(s.room||'')}" placeholder="ห้อง"><button class="ic rm" aria-label="ลบคาบ" style="color:var(--bad)">ลบ</button>`;
   r.querySelector('.rm').onclick=()=>r.remove();$('fSes').appendChild(r)}
 function openEd(id){
+  if(VIEW){toast('นี่คือตารางของเพื่อน กด “ใช้เป็นตารางของฉัน” ก่อนถึงจะแก้ได้');return}
   const c=id?S.courses.find(x=>x.id===id):null;if(id&&!c)return;edId=id;
   $('mdt').textContent=c?'แก้ไขวิชา':'เพิ่มวิชา';$('fDel').style.display=c?'':'none';
   $('fCode').value=c?.code||'';$('fSec').value=c?.sec||'';$('fName').value=c?.name||'';$('fCr').value=c?.credits??'';
@@ -673,7 +768,7 @@ function openEd(id){
   $('ov').classList.add('show');setTimeout(()=>$(c?'fName':'fCode').focus(),30)}
 const close=()=>{$('ov').classList.remove('show');edId=null};
 $('fCancel').onclick=close;$('ov').onclick=e=>{if(e.target===$('ov'))close()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();$('xov').classList.remove('show');$('pop').classList.remove('show')}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();$('xov').classList.remove('show');$('sov').classList.remove('show');$('pop').classList.remove('show')}});
 $('fAddS').onclick=()=>sesRow({d:0,s:540,e:720,room:''});
 $('add').onclick=()=>openEd(null);
 $('fSave').onclick=()=>{
@@ -690,6 +785,7 @@ $('fDel').onclick=()=>{snap();const c=S.courses.find(x=>x.id===edId);S.courses=S
 
 $('term').value=S.term||'ภาคปลาย 2569';$('term').oninput=e=>{S.term=e.target.value;save()};
 applyTheme();route();render();
+{const tk=tokFrom(location.search);if(tk)enterView(tk)}
 addEventListener('hashchange',route);
 let rw;addEventListener('resize',()=>{clearTimeout(rw);rw=setTimeout(render,150)});
 setInterval(render,30000);
