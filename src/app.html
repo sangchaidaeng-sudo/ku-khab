@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf9f6">
+<title>คาบ · ตารางเรียน KU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a pocket companion that answers "what's my next class?" before anything else
+   IDEA: a departures board for your day: next class big, the week as a calendar column view
+   PICTURE: the "now / next" board with live countdown, then Mon–Fri columns with time running down
+   COLOUR and TYPE: deep leaf green + sharp lime; Space Grotesk numbers, Kanit text
+   LAYOUT: board on top, week below; tabs at top on desktop, bottom on phones */
+:root{--bg:#f3f5f0;--sf:#ffffff;--ink:#12201a;--mute:#5f6e66;--line:#e2e7df;--soft:#eaefe6;--pri:#0f3d2e;--priInk:#fff;--acc:#c6f432;--accInk:#12201a;--bad:#e5484d;--board:#0f3d2e;--boardInk:#f2f7ee;--boardMute:#a9c4b5;--today:#f6fbe9}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Kanit",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-family:"Space Grotesk","Kanit",sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 max(3vw,14px,env(safe-area-inset-right)) 0 max(3vw,14px,env(safe-area-inset-left))}
+/* top */
+.top{display:flex;align-items:center;gap:16px;padding:16px 0;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo i{width:36px;height:36px;border-radius:11px;background:var(--board);display:grid;place-items:center;color:var(--acc);font-style:normal;font-weight:700;font-size:20px}
+.logo .lg{width:36px;height:36px;border-radius:10px;box-shadow:0 2px 6px -2px #0003,0 0 0 1px #0000000d}
+.logo b{font-size:22px;letter-spacing:-.01em}.logo small{display:block;font-size:12px;color:var(--mute);line-height:1;margin-top:-2px}
+.tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:14px;margin-left:auto}
+.tabs a{display:flex;align-items:center;gap:8px;padding:0 16px;min-height:40px;border-radius:10px;text-decoration:none;color:color-mix(in srgb,var(--ink) 74%,var(--soft));font-weight:500;font-size:15px}
+.tabs a.on{background:var(--sf);color:var(--ink);box-shadow:0 1px 3px #0001}
+.tabs a:focus-visible,.b:focus-visible,.dchip:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.thb{min-height:44px;min-width:44px;border-radius:12px;border:1px solid var(--line);background:var(--sf);cursor:pointer;display:grid;place-items:center}
+/* board */
+.board{background:var(--board);color:var(--boardInk);border-radius:18px;padding:14px 20px 16px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 16px;align-items:center;position:relative;overflow:hidden}
+.board .lbl{grid-row:1/3}
+.lbl{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accInk);background:var(--acc);padding:3px 12px;border-radius:999px;white-space:nowrap}
+.lbl.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accInk);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.lbl.live::before{animation:none}}
+.bn{font-size:20px;line-height:1.3;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bm{color:var(--boardMute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bm b{color:var(--boardInk);font-weight:600}
+.cd{grid-row:1/3;grid-column:3;text-align:right;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.cd .big{font-size:34px;font-weight:700;line-height:1;color:var(--acc)}
+.cd .unit{font-size:13px;color:var(--boardMute)}
+.prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:#ffffff1a}.prog i{display:block;height:100%;background:var(--acc)}
+/* toolbar */
+.tbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px;align-items:center}
+.st{background:var(--sf);border:1px solid var(--line);border-radius:999px;padding:4px 12px;display:flex;align-items:baseline;gap:5px;font-size:13px;color:var(--mute);white-space:nowrap}
+.st b{font-size:15px;color:var(--ink)}.st.bad{border-color:var(--bad);color:var(--bad)}.st.bad b{color:var(--bad)}
+.term{border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--mute);font-size:16px;padding:4px 2px;width:min(320px,100%);margin-bottom:4px}
+.xb{min-height:42px}.sb{margin-left:auto}
+.vseg{display:flex;background:var(--soft);border-radius:12px;padding:3px}
+.vseg button{border:0;background:transparent;border-radius:9px;min-height:36px;padding:0 14px;cursor:pointer;font-weight:500;color:color-mix(in srgb,var(--ink) 74%,var(--soft));font-size:14px}
+.vseg button.on{background:var(--sf);color:var(--ink);box-shadow:0 1px 3px #0002}
+.xmd{width:min(860px,100%)}
+.xprev{background:var(--soft);border-radius:14px;padding:10px;display:grid;place-items:center;max-height:58vh;overflow:auto}
+.xprev img{max-width:100%;max-height:54vh;border-radius:8px;box-shadow:0 8px 24px -12px #0005;-webkit-touch-callout:default}
+a.b{text-decoration:none}
+.foot2 a{color:inherit;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.about{border-top:1px solid var(--line);margin-top:8px;padding:18px 0 6px;color:var(--mute);font-size:14px;max-width:760px}
+.about h2{font-size:16px;color:var(--ink);margin:0 0 6px}.about p{margin:0 0 8px}
+.about details{border-top:1px dashed var(--line);padding:6px 0}.about summary{cursor:pointer;color:var(--ink);min-height:36px;display:flex;align-items:center}
+.vbar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin-bottom:12px}
+body.viewing .vbar{display:flex}.vbar b{font-size:18px;display:block;color:var(--ink)}.vbar small{color:var(--mute);font-size:14px}
+body.viewing .sb{display:none}
+.shmd{width:min(680px,100%)}
+.shgrid{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;align-items:start;margin:10px 0 6px}
+.shqr{background:#fff;border-radius:14px;padding:10px;border:1px solid var(--line);aspect-ratio:1;display:grid;place-items:center;text-align:center}
+.shqr svg{width:100%;height:auto;display:block}
+.shside{display:grid;gap:10px}.shl{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+#shLink{font-size:14px;color:var(--mute)}
+.shbk{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.shbk b{display:block;margin-bottom:2px}
+@media(max-width:560px){.shgrid{grid-template-columns:minmax(0,1fr)}.shqr{width:min(240px,100%);justify-self:center}}
+/* day view */
+.dayv{display:none;margin-bottom:24px}
+body.dv .dayv{display:block}body.dv .week{display:none}
+.dchips{display:grid;grid-template-columns:repeat(var(--dn),minmax(0,1fr));gap:6px;margin-bottom:12px;position:sticky;top:0;z-index:4;background:var(--bg);padding:6px 0}
+.dchip{border:1px solid var(--line);background:var(--sf);border-radius:14px;min-height:56px;cursor:pointer;display:grid;place-items:center;align-content:center;gap:0;padding:4px 0}
+.dchip span{font-weight:700;font-size:16px}.dchip small{font-size:11px;color:var(--mute)}
+.dchip.today span::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--bad);margin-left:4px;vertical-align:middle}
+.dchip.on{background:var(--pri);border-color:var(--pri);color:var(--priInk)}.dchip.on small{color:inherit;opacity:.8}
+.dlist{display:grid;gap:8px;touch-action:pan-y}
+.dh{font-size:15px;color:var(--mute);margin:2px 2px 4px;display:flex;justify-content:space-between}
+.drow{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;border:0;background:transparent;padding:0;text-align:left;cursor:pointer;width:100%}
+.drow .dt{padding-top:10px;text-align:right}.drow .dt b{display:block;font-size:17px;line-height:1.1}.drow .dt small{color:var(--mute);font-size:12px}
+.drow .card2{background:var(--cb);color:var(--ci);border-radius:16px;padding:12px 14px;display:grid;gap:2px;border:2px solid transparent}
+.drow .c{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:14px}.drow .n{font-weight:600;font-size:17px;line-height:1.3}.drow .m{font-size:13px;opacity:.8}
+.drow.cur .card2{border-color:var(--ce)}.drow.past .card2{filter:saturate(.25)}.drow.past .card2 .n{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,var(--ci) 45%,transparent)}
+.drow .live{font-size:12px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:8px}.drow .live i{flex:1;height:4px;border-radius:4px;background:color-mix(in srgb,var(--ci) 20%,transparent);overflow:hidden}.drow .live i b{display:block;height:100%;background:var(--ci)}
+.drow.clash .card2{border:2px dashed var(--bad)}
+.gap{margin-left:68px;font-size:13px;color:var(--mute);padding:2px 0 2px 14px;border-left:2px dotted var(--line)}
+.dnone{padding:40px 16px;text-align:center;color:var(--mute);background:var(--sf);border:1px dashed var(--line);border-radius:16px}
+/* week */
+.week{background:var(--sf);border:1px solid var(--line);border-radius:22px;margin-bottom:28px;overflow-x:auto;overscroll-behavior-x:contain}
+.wg{min-width:980px;position:relative}
+.wr{display:grid;grid-template-columns:88px minmax(0,1fr);border-top:1px solid var(--line)}
+.wr.hd{border-top:0}
+.wd{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;letter-spacing:.06em;border-right:1px solid var(--line);position:sticky;left:0;background:var(--sf);z-index:3}
+.wd.today{color:var(--pri)}.wd.today span{background:var(--acc);color:var(--accInk);padding:2px 10px;border-radius:999px}
+.wt{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+.wt span{padding:10px 10px;font-size:14px;color:var(--mute);border-left:1px solid var(--line)}
+.wt span:first-child{border-left:0}
+.lane{position:relative;height:var(--rh);background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100%/var(--n))),repeating-linear-gradient(90deg,transparent 0 calc(50%/var(--n)),var(--dash) calc(50%/var(--n)) calc(50%/var(--n) + 1px),transparent calc(50%/var(--n) + 1px) calc(100%/var(--n)))}
+.lane.today{background-color:var(--today)}
+.ev{position:absolute;border-radius:12px;padding:6px 10px;border:2px solid transparent;cursor:pointer;text-align:left;background:var(--cb);color:var(--ci);overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:2px;line-height:1.3;z-index:1;transition:border-color .15s}
+.ev.hl,.ev:hover{border-color:var(--ce)}
+.ev:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ev .c{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:11px;letter-spacing:.02em;opacity:.72;line-height:1.25}
+.ev span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+.ev .n{font-size:15px;font-weight:600;line-height:1.3;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ev .m{font-size:13px;font-weight:500;display:flex;align-items:center;gap:4px;margin-top:1px}
+.ev .m svg{flex:none;opacity:.8}.ev .m span{flex:0 1 auto;min-width:0;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
+.ev.sh{padding:5px 7px;gap:1px}
+.ev.sh .c{display:none}.ev.sh .n{font-size:13px;line-height:1.3}.ev.sh .m{font-size:12px;letter-spacing:-.02em}.ev.sh .m svg{display:none}
+.tip{position:fixed;z-index:40;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;white-space:pre-line;max-width:280px;box-shadow:0 12px 30px -10px #0006;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tip.show{opacity:1;transform:none}.tip b{font-size:14px}
+
+.ev.clash{border-color:var(--bad);border-style:dashed}
+.nowl{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);z-index:0;pointer-events:none}.nowl::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.empty{padding:56px 20px;text-align:center;color:var(--mute)}
+.empty .b{margin-top:12px}
+/* panels */
+h1{font-size:clamp(26px,3vw,34px);line-height:1.1;margin:8px 0 6px}
+h2{font-size:19px;margin:0 0 6px}
+.hint{color:var(--mute);font-size:14px;margin:0 0 12px}
+.card{background:var(--sf);border:1px solid var(--line);border-radius:20px;padding:20px}
+.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:28px}
+textarea,input.f,select.f{font-size:16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+textarea{min-height:230px;resize:vertical}
+textarea:focus,input.f:focus,select.f:focus{outline:2px solid var(--pri);outline-offset:1px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.b{min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--sf);cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.b.p{background:var(--pri);border-color:var(--pri);color:var(--priInk)}
+.b.a{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
+.msg{margin-top:12px;font-size:14px;padding:10px 12px;border-radius:12px;background:var(--soft);display:none}.msg.show{display:block}.msg.warn{color:var(--bad)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0 0 14px;display:grid;gap:10px}
+.steps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;font-size:15px}
+.steps li::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--accInk);display:grid;place-items:center;font-weight:700;font-size:14px}
+.ai textarea{min-height:120px;font-size:13px;color:var(--mute);margin-top:12px}
+.clist{display:grid;gap:10px;margin-bottom:28px}
+.ci{display:grid;grid-template-columns:6px minmax(0,1fr) auto auto;gap:14px;align-items:center;background:var(--sf);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.ci .bar6{width:6px;align-self:stretch;border-radius:6px;background:var(--ce)}
+.ci .nm{font-weight:600}.ci .sub{font-size:13px;color:var(--mute)}.ci .x{color:var(--bad)}
+.ci .cr{font-size:22px;font-weight:700;text-align:right;line-height:1}.ci .cr small{display:block;font-size:11px;color:var(--mute);font-weight:500;font-family:"Kanit",sans-serif}
+.ic{min-height:44px;min-width:44px;border:0;background:var(--soft);border-radius:12px;cursor:pointer;font-weight:500;color:var(--ink);padding:0 12px}
+.tot{display:flex;justify-content:space-between;align-items:center;background:var(--pri);color:var(--priInk);border-radius:16px;padding:14px 18px;font-weight:600}
+.tot b{font-size:28px;color:var(--acc)}
+/* theme menu */
+.tm{position:relative}
+.pop{position:absolute;right:0;top:calc(100% + 8px);background:var(--sf);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 48px -20px #0007;padding:14px;width:min(380px,calc(100vw - 28px));z-index:9;display:none;max-height:78vh;overflow:auto}
+.pop.show{display:block}
+.pop .lb{font-size:12px;font-weight:600;color:var(--mute);margin:10px 2px 8px}.pop .lb:first-child{margin-top:0}
+.pop .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pop .seg2{display:flex;background:var(--soft);border-radius:10px;padding:3px}.pop .seg2 button{flex:1;justify-content:center;min-height:38px}.pop .seg2 button.on{background:var(--sf);box-shadow:0 1px 3px #0002}
+.pop button{display:flex;align-items:center;gap:10px;border:0;background:transparent;border-radius:10px;cursor:pointer;text-align:left;font-size:14px}
+.so{flex-direction:column;align-items:stretch!important;gap:0!important;border:1px solid var(--line)!important;overflow:hidden;padding:0}
+.so .s{display:grid;grid-template-columns:repeat(3,1fr);height:38px}.so .s i{display:block}
+.so .t{padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.so.on{box-shadow:0 0 0 2px var(--pri);font-weight:600}
+.so.auto .s{grid-template-columns:1fr 1fr}
+/* modal/toast */
+.ov{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:16px;z-index:20}.ov.show{display:flex}
+.md{background:var(--sf);border-radius:20px;padding:20px;width:min(580px,100%);max-height:90vh;overflow:auto}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fg label{font-size:14px;color:var(--mute);display:grid;gap:4px}.fg .w{grid-column:1/-1}
+.ses{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr) 44px;gap:6px;margin-top:6px;align-items:center}
+.sw{display:flex;gap:6px;flex-wrap:wrap}.sw button{width:32px;height:32px;border-radius:9px;border:2px solid transparent;cursor:pointer}.sw button.on{border-color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;display:none;gap:14px;align-items:center;z-index:30;font-size:15px;max-width:calc(100vw - 24px)}
+.toast.show{display:flex}.toast button{background:transparent;border:0;color:var(--acc);font-weight:700;cursor:pointer;min-height:36px}
+.view[hidden]{display:none}
+footer{color:var(--mute);font-size:13px;padding:8px 0 32px}
+@media(max-width:820px){.two{grid-template-columns:minmax(0,1fr)}}
+@media(min-width:700px){.wg{min-width:0}}
+@media(max-width:1000px){.ev{padding:5px 7px}.ev .c{font-size:10.5px}.ev .n{font-size:13.5px;line-height:1.28}.ev .m{font-size:12px}.ev.sh{padding:5px 5px}.ev.sh .n{font-size:12.5px}.ev.sh .m{font-size:11px}}
+@media(max-width:699px){
+ .board{grid-template-columns:minmax(0,1fr) auto;padding:12px 16px 14px;border-radius:16px}
+ .board .lbl{grid-row:auto;justify-self:start;margin-bottom:4px}.bn{font-size:18px}.bm{font-size:13px}
+ .cd{grid-row:1/4;grid-column:2;flex-direction:column;align-items:flex-end;gap:0}.cd .big{font-size:30px}
+ .vseg{margin-left:0;order:5;flex:1 1 calc(100% - 64px)}.vseg button{flex:1}.xb span{display:none}.xb{padding:0 12px;order:6;margin-left:0}.sb{order:6}.xmd .vseg{flex:none;width:100%}
+ .bn{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+ .tm{margin-left:auto}
+ .wg{min-width:760px}
+ .ov{align-items:flex-end;padding:0}.md{border-radius:22px 22px 0 0;width:100%;max-height:88vh;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+ .pop{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;border-radius:22px 22px 0 0;max-height:80vh;padding:16px 16px calc(16px + env(safe-area-inset-bottom));z-index:25}
+ .pop.show::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 12px}
+}
+@media(max-width:640px){
+ .tabs{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));margin:0;z-index:15;background:var(--sf);border:1px solid var(--line);box-shadow:0 10px 30px -10px #0004;padding:5px;border-radius:18px}
+ .tabs a{flex:1;justify-content:center;flex-direction:column;gap:0;font-size:12px;min-height:52px}
+ .tabs a.on{background:var(--pri);color:var(--priInk)}
+ .top{padding:12px 0}.thb{margin-left:auto}
+ body{padding-bottom:calc(90px + env(safe-area-inset-bottom))}.toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+ .week{border-radius:16px}.wr{grid-template-columns:56px minmax(0,1fr)}.wd{font-size:13px}
+ .ses{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .ci{grid-template-columns:6px minmax(0,1fr) auto;}.ci .ic{grid-column:2/-1;justify-self:start;min-height:36px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#week"><img class="lg" src="data:image/png;base64,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" alt="" width="36" height="36"><span><b>คาบ</b><small>ตารางเรียน KU ฉบับนิสิต</small></span></a>
+    <nav class="tabs" id="tabs" aria-label="เมนู"></nav>
+    <div class="tm"><button class="thb" id="thBtn" aria-label="เปลี่ยนธีม" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button><div class="pop" id="pop"></div></div>
+  </header>
+<main id="main">
+  <section class="view" id="v-week" aria-labelledby="wh1">
+    <h1 id="wh1" class="sr">ตารางเรียนของฉัน</h1>
+    <div class="vbar" id="vbar"><div><b id="vbName">ตารางของเพื่อน</b><small id="vbTerm"></small></div><div class="bar"><button class="b" id="vbBack">กลับไปตารางของฉัน</button><button class="b p" id="vbUse">ใช้เป็นตารางของฉัน</button></div></div>
+    <div class="board" id="board" aria-live="polite"></div>
+    <div class="tbar" id="tbar"></div>
+    <div class="dayv" id="dayv"></div>
+    <div class="week" id="week"></div>
+  </section>
+
+  <section class="view" id="v-import" hidden>
+    <h1>นำเข้าวิชา</h1>
+    <p class="hint">ไม่ต้องใช้รหัสนนทรี ข้อมูลอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น</p>
+    <div class="two">
+      <div class="card">
+        <h2>วางจาก MyKU หรือคำตอบจาก AI</h2>
+        <p class="hint">คัดลอกจากหน้า “ผลการลงทะเบียน” ใน MyKU (มีวันเวลาเรียนครบ) หรือจากโน้ตที่จดไว้ก็ได้ ขอแค่มีรหัสวิชา ชื่อวิชา วัน เวลา วิชาที่รหัสซ้ำกับของเดิมจะถูกแทนที่</p>
+        <textarea id="paste" placeholder="ตัวอย่าง&#10;02036281-66 โรคพืชวิทยาเบื้องต้น(3)&#10;บรรยาย หมู่ 700&#10;MON 13:00 - 14:00 ห้อง LH4-102&#10;ปฏิบัติ หมู่ 715&#10;FRI 13:00 - 16:00 ห้อง ติดต่อผู้สอน"></textarea>
+        <div class="bar" style="margin-top:12px"><button class="b p" id="go">สร้างตาราง</button><button class="b" id="demo">ลองข้อมูลตัวอย่าง</button><button class="b" id="clearPaste">ล้างช่องนี้</button></div>
+        <div class="msg" id="msg"></div>
+      </div>
+      <div class="card ai">
+        <h2>แยกข้อความไม่ถูก? ให้ AI ช่วย</h2>
+        <ol class="steps">
+          <li>กด “คัดลอก prompt”</li>
+          <li>เปิด Claude, ChatGPT หรือ Gemini วาง prompt แล้ววางข้อความที่คัดลอกจาก MyKU ต่อท้าย</li>
+          <li>คัดลอกคำตอบของ AI มาวางในช่องด้านซ้าย แล้วกด “สร้างตาราง”</li>
+        </ol>
+        <button class="b a" id="cpPrompt">คัดลอก prompt</button>
+        <textarea id="promptTxt" readonly aria-label="prompt สำหรับ AI">ช่วยแปลงตารางเรียนจากระบบ MyKU ของมหาวิทยาลัยเกษตรศาสตร์ ด้านล่างนี้ ให้เป็น JSON ตามรูปแบบนี้เท่านั้น ห้ามมีคำอธิบายหรือข้อความอื่น
+
+[
+  {
+    "code": "รหัสวิชาพร้อมเลขท้าย เช่น 02037471-66",
+    "name": "ชื่อวิชา ใช้ชื่อภาษาไทยถ้ามี",
+    "credits": 3,
+    "sec": "หมู่เรียน เช่น 700 หรือ 700/711",
+    "sessions": [
+      { "day": "MON", "start": "09:00", "end": "12:00", "room": "LH4-201", "type": "บรรยาย" }
+    ],
+    "exams": [
+      { "kind": "กลางภาค", "date": "17/01/2570", "start": "16:30", "end": "19:30" }
+    ]
+  }
+]
+
+กติกา:
+- อ่านทุกวิชาในข้อความ ห้ามข้ามวิชาใด
+- day ใช้ MON TUE WED THU FRI SAT SUN
+- เวลาเป็นแบบ 24 ชั่วโมง HH:MM
+- type ใช้ "บรรยาย" หรือ "ปฏิบัติ" ถ้าไม่รู้ให้เป็น ""
+- credits คือหน่วยกิตรวมของวิชา (บรรยาย + ปฏิบัติ)
+- วิชาที่มีทั้งบรรยายและปฏิบัติ ให้รวมเป็นวิชาเดียว มีหลาย sessions
+- ห้องที่เขียนว่า "ติดต่อผู้สอน" หรือ "Contact Teacher" ให้ใส่ room เป็น "ติดต่อผู้สอน"
+- exams ใส่วันสอบกลางภาค/ปลายภาคถ้ามี (kind เป็น "กลางภาค" หรือ "ปลายภาค") ถ้าไม่มีให้เป็น []
+- ถ้าไม่มีข้อมูลช่องไหน ให้เป็น "" (credits ให้เป็น null) ห้ามเดา
+- วิชาที่ไม่มีวันเวลาเรียน ให้ sessions เป็น []
+
+ตารางเรียนจาก MyKU:
+</textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-courses" hidden>
+    <h1>วิชาของฉัน</h1>
+    <input class="term" id="term" aria-label="ภาคการศึกษา" placeholder="ภาคการศึกษา เช่น ภาคปลาย 2569">
+    <div class="bar" style="margin:10px 0 16px"><button class="b p" id="add">+ เพิ่มวิชาเอง</button><button class="b" id="clear">ล้างทั้งหมด</button></div>
+    <div class="clist" id="clist"></div>
+  </section>
+</main>
+  <section class="about" aria-labelledby="ab">
+    <h2 id="ab">คาบ คืออะไร</h2>
+    <p>คาบ เป็นเว็บแอปจัดตารางเรียนฟรีสำหรับนิสิตมหาวิทยาลัยเกษตรศาสตร์ ทั้งบางเขน กำแพงแสน ศรีราชา และสกลนคร คัดลอกรายวิชาจากหน้าผลการลงทะเบียนใน MyKU มาวาง แล้วได้ตารางเรียนรายสัปดาห์ บอกคาบที่กำลังเรียนและคาบถัดไป เตือนวิชาที่เวลาชนกัน และบันทึกตารางเป็นรูปไว้ตั้งวอลเปเปอร์มือถือได้</p>
+    <p><a href="https://ku-khab.vercel.app/guide.html">วิธีจัดตารางเรียน KU จาก MyKU ทีละขั้นตอน</a> · <a href="https://ku-khab.vercel.app/ku-get-reg.html">KU Get Reg ปิดแล้ว ใช้อะไรแทน</a></p>
+    <details><summary>ต้องใช้รหัสนนทรีไหม</summary><p>ไม่ต้อง คาบไม่ขอรหัสผ่านใด ๆ ข้อมูลตารางเก็บอยู่ในเบราว์เซอร์ของคุณเท่านั้น ไม่ถูกส่งขึ้นเซิร์ฟเวอร์</p></details>
+    <details><summary>ใช้บนมือถือได้ไหม</summary><p>ได้ เปิดใน Safari หรือ Chrome แล้วเลือก “เพิ่มไปยังหน้าจอโฮม” จะได้ไอคอนคาบไว้เปิดเหมือนแอป</p></details>
+    <details><summary>ใช้แทน KU Get Reg ได้ไหม</summary><p>ใช้ดูและจัดตารางเรียนได้ โดยไม่ต้องล็อกอิน คาบเป็นโปรเจกต์อิสระ ไม่เกี่ยวข้องกับ KU Get Reg หรือมหาวิทยาลัย</p></details>
+  </section>
+  <footer class="foot2">คาบ ไม่ใช่ระบบของมหาวิทยาลัย ตรวจสอบตารางจริงกับ MyKU เสมอ · พัฒนาโดย <a href="https://www.instagram.com/daen6_/" target="_blank" rel="noopener">@daen6_</a></footer>
+</div>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-labelledby="mdt"><div class="md">
+  <h2 id="mdt">แก้ไขวิชา</h2>
+  <div class="fg">
+    <label>รหัสวิชา<input class="f" id="fCode"></label>
+    <label>หมู่ (Sec)<input class="f" id="fSec"></label>
+    <label class="w">ชื่อวิชา<input class="f" id="fName"></label>
+    <label>หน่วยกิต<input class="f" id="fCr" inputmode="numeric"></label>
+    <label>สี<div class="sw" id="fCol"></div></label>
+  </div>
+  <div style="margin-top:14px;font-weight:600">คาบเรียน</div>
+  <div id="fSes"></div>
+  <div class="bar" style="margin-top:8px"><button class="b" id="fAddS">+ เพิ่มคาบ</button></div>
+  <div class="bar" style="justify-content:space-between;margin-top:16px">
+    <button class="b" id="fDel" style="color:var(--bad)">ลบวิชา</button>
+    <span style="display:flex;gap:10px"><button class="b" id="fCancel">ยกเลิก</button><button class="b p" id="fSave">บันทึก</button></span>
+  </div>
+</div></div>
+<div class="ov" id="xov" role="dialog" aria-modal="true" aria-labelledby="xt"><div class="md xmd">
+  <h2 id="xt">บันทึกตารางเป็นรูป</h2>
+  <div class="vseg" style="margin:10px 0 12px"><button data-xm="land">แนวนอน</button><button data-xm="port">แนวตั้ง (มือถือ)</button></div>
+  <div class="xprev"><img id="xImg" alt=""></div>
+  <p class="hint" style="margin-top:10px">ถ้ากดดาวน์โหลดแล้วไม่มีอะไรเกิดขึ้น: บนมือถือให้กดค้างที่รูปแล้วเลือก “บันทึกรูปภาพ” บนคอมให้คลิกขวาที่รูปแล้วเลือก “บันทึกรูปภาพเป็น…”</p>
+  <div class="bar" style="justify-content:flex-end"><button class="b" id="xClose">ปิด</button><button class="b" id="xShare" hidden>แชร์</button><a class="b p" id="xDl" href="#">ดาวน์โหลด PNG</a></div>
+</div></div>
+<div class="ov" id="sov" role="dialog" aria-modal="true" aria-labelledby="sht"><div class="md shmd">
+  <h2 id="sht">แชร์ตารางเรียน</h2>
+  <p class="hint">ข้อมูลตารางอยู่ในลิงก์นี้ทั้งหมด ไม่ได้เก็บบนเซิร์ฟเวอร์ เพื่อนเปิดลิงก์แล้วดูตารางของคุณได้ทันที ถ้าแก้ตารางทีหลัง ต้องแชร์ลิงก์ใหม่</p>
+  <div class="shgrid">
+    <div class="shqr" id="shQR" aria-label="QR code ของลิงก์ตาราง"></div>
+    <div class="shside">
+      <label class="shl">ชื่อที่จะโชว์ให้เพื่อนเห็น<input class="f" id="shName" maxlength="40" placeholder="เช่น แดง"></label>
+      <label class="shl">ลิงก์ตาราง<input class="f" id="shLink" readonly></label>
+      <small class="hint" id="shLen" style="color:var(--bad)"></small>
+      <div class="bar"><button class="b p" id="shCopy">คัดลอกลิงก์</button><button class="b" id="shNative" hidden>แชร์ไปแอปอื่น</button></div>
+    </div>
+  </div>
+  <div class="shbk"><b>สำรองตาราง</b><p class="hint">ลิงก์ด้านบนใช้เป็นตัวสำรองได้ ส่งเข้า LINE หรือเก็บในโน้ตของตัวเองไว้ ถ้าเปลี่ยนมือถือหรือล้างเบราว์เซอร์ ให้เปิดลิงก์นั้นแล้วกด “ใช้เป็นตารางของฉัน” หรือเก็บเป็นไฟล์ แล้ววางเนื้อหาในไฟล์ที่หน้านำเข้า</p>
+  <button class="b" id="shFile">ดาวน์โหลดไฟล์สำรอง (.json)</button></div>
+  <div class="bar" style="justify-content:flex-end;margin-top:14px"><button class="b" id="shClose">ปิด</button></div>
+</div></div>
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button id="undo">เลิกทำ</button></div>
+
+<script>
+{
+const DAYS=['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'],SD=['จ.','อ.','พ.','พฤ.','ศ.','ส.','อา.'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const pm=s=>{const x=/^(\d{1,2})[:.](\d{2})$/.exec(String(s).trim());return x?(+x[1])*60+(+x[2]):NaN};
+const key=c=>{const m=/\d{8}/.exec(String(c));return m?m[0]:String(c).trim().toLowerCase()};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const dur=m=>{const h=Math.floor(m/60),mm=m%60;return h?(h+' ชม.'+(mm?' '+mm+' นาที':'')):mm+' นาที'};
+
+/* themes */
+const CH=(bg,sf,ink,mute,line,soft,pri,priInk,acc,accInk,board,boardInk,boardMute,today,dash)=>({bg,sf,ink,mute,line,soft,pri,priInk,acc,accInk,board,boardInk,boardMute,today,dash});
+const THEMES={
+ leaf:{n:'ใบชา',g:0,dark:0,by:'course',v:CH('#f3f5f0','#ffffff','#12201a','#5f6e66','#e2e7df','#eaefe6','#0f3d2e','#fff','#c6f432','#12201a','#0f3d2e','#f2f7ee','#a9c4b5','#f7fbef','#eef1ec'),
+  pal:[['#dcefe2','#2c5a3d','#3f8a5c'],['#f8e2e5','#8c2c3d','#c9506a'],['#e4eafb','#2d4c96','#5679d8'],['#fbefd9','#7a5517','#d29a2e'],['#e7f2e9','#2f5a3c','#6aa97c'],['#ece5f8','#593d97','#8f6ad8'],['#ddf0f3','#1d5964','#3fa3b5'],['#fde7dc','#88401f','#dc7c4b']]},
+ forest:{n:'ป่ายามค่ำ',g:0,dark:1,by:'course',v:CH('#0b100e','#121a16','#e9f1ec','#8fa198','#1f2b25','#18231e','#c6f432','#12201a','#c6f432','#12201a','#16241d','#f2f7ee','#93ab9e','#141f19','#18231e'),
+  pal:[['#1d3a2a','#bff0d0','#4cc985'],['#3d2a2e','#ffc9d2','#ff7d95'],['#22305a','#cddbff','#7d9dff'],['#3d3320','#ffe2a8','#f2b84b'],['#26382a','#cfeed4','#7ed492'],['#2f2748','#ddd0ff','#a98bff'],['#1c3940','#c3eef6','#4cc6dc'],['#40281f','#ffd3bf','#ff935e']]},
+ sea:{n:'ทะเล',g:0,dark:0,by:'course',v:CH('#f1f4f9','#ffffff','#0f1b2d','#5d6b80','#e0e6ef','#e8edf5','#123a6b','#fff','#7ee3ff','#0f1b2d','#123a6b','#eef5ff','#a8bedb','#f1f7ff','#eef2f8'),
+  pal:[['#dbeafe','#1e3a8a','#3b82f6'],['#d5f5f2','#134e4a','#14b8a6'],['#e0e7ff','#312e81','#6366f1'],['#cff6fd','#155e75','#06b6d4'],['#e0f2fe','#0c4a6e','#0ea5e9'],['#ede9fe','#4c1d95','#8b5cf6'],['#dcfce7','#14532d','#22c55e'],['#fef3c7','#78350f','#f59e0b']]},
+ bw:{n:'ขาวดำ',g:0,dark:0,by:'course',v:CH('#f5f5f4','#ffffff','#111111','#6b6b6b','#e6e6e4','#ededeb','#111111','#fff','#ffde21','#111111','#111111','#fafafa','#a3a3a3','#fffbe0','#f0f0ee'),
+  pal:[['#fff3a6','#111','#111'],['#ededeb','#111','#111'],['#e2e2df','#111','#111'],['#fff8cc','#111','#111'],['#f4f4f2','#111','#555'],['#d9d9d5','#111','#111'],['#fffbe3','#111','#111'],['#e8e8e5','#111','#111']]},
+ dawn:{n:'ฟ้าสาง',g:1,dark:0,by:'course',v:CH('#f6f6fc','#ffffff','#1b1b3a','#6b6b8a','#e6e6f2','#eeeef8','#4b4bb5','#fff','#ffd84d','#1b1b3a','#2b2b6b','#f3f3ff','#b4b4e0','#f5f5ff','#f0f0f8'),
+  pal:[['#e4e4fb','#2e2e7a','#6464d8'],['#ece4fb','#4a2a85','#8d5fe0'],['#e0ebfb','#1f4a85','#4d8be0'],['#f3e4f6','#6a2a75','#c35fd0'],['#e4f0f8','#1f5875','#4fa3cf'],['#efe9fb','#45307a','#9a7be6'],['#e6e9f7','#2b3a70','#6b7fd4'],['#f6e6ef','#7a2a52','#d85f98']]},
+ midnight:{n:'เที่ยงคืน',g:1,dark:1,by:'day',v:CH('#111116','#18181f','#f2f2f7','#9a9aab','#2b2b36','#20202a','#8c9bff','#0f0f1a','#ffcf5a','#1a1300','#1d1d2b','#f2f2f7','#a0a0c0','#1c1c27','#22222c'),
+  pal:[['#4a1f26','#ffd6dc','#e5485d'],['#4a2a19','#ffdcc4','#e8742c'],['#463619','#ffe7b3','#e0a526'],['#1e3d2b','#c9f2d8','#30b467'],['#1f2b5c','#d4ddff','#4c6ef5'],['#35215a','#e4d4ff','#9b5cf6'],['#4a1d3a','#ffd1ea','#e0479e'],['#173a3f','#c4eef3','#1fb5c9']]},
+ thaiday:{n:'สีประจำวัน',g:1,dark:0,by:'day',v:CH('#faf9f6','#ffffff','#1f2937','#5b6170','#ebe8e2','#f3f1ec','#1f2937','#fff','#fcd34d','#1f2937','#1f2937','#f9fafb','#b8bec8','#fffbeb','#f3f1ec'),
+  pal:[['#fef3c7','#713f12','#eab308'],['#fce7f3','#831843','#ec4899'],['#dcfce7','#14532d','#22c55e'],['#ffedd5','#7c2d12','#f97316'],['#dbeafe','#1e3a8a','#3b82f6'],['#f3e8ff','#581c87','#a855f7'],['#fee2e2','#7f1d1d','#ef4444'],['#e0f2fe','#0c4a6e','#0ea5e9']]},
+ chanom:{n:'ชานม',g:1,dark:0,by:'course',v:CH('#fbf4ea','#fffaf3','#3a2614','#86684c','#efe0cb','#f6e9d6','#7a4a1e','#fff','#f4b860','#3a2614','#5a3517','#fff4e6','#e0c3a0','#fff3e0','#f6ead9'),
+  pal:[['#fde2bd','#6b3e0c','#d98a2b'],['#f9d9c2','#6e3216','#d26a3a'],['#f6e3b4','#5e4510','#c79a26'],['#efdcc6','#5a3a1e','#b07a46'],['#fbe6cf','#6a4220','#e09a5a'],['#f2d7cf','#6a2e24','#c5644f'],['#e9e2c4','#4d4320','#a89645'],['#f7dfc9','#62381d','#cf8248']]},
+ khaohom:{n:'ข้าวหอม',g:1,dark:0,by:'course',v:CH('#f6f3ea','#fdfbf5','#2f2c1e','#7a7560','#e6dfca','#eee8d6','#5f5a2e','#fff','#d9c86a','#2f2c1e','#3f3c22','#f8f5e8','#cbc49c','#f9f5e4','#efe9d8'),
+  pal:[['#ece5c6','#4a4320','#a6994d'],['#e6e9cf','#3b4320','#8a9a45'],['#efe2c9','#4f3e20','#b5924f'],['#e3e6d8','#363d2b','#7f8c62'],['#f0e8cf','#4e4424','#b9a35a'],['#e8decf','#4a3a2a','#a08566'],['#e2e9de','#2f3f2c','#6f9468'],['#efe5d3','#4f412a','#b39a66']]},
+ paper:{n:'กระดาษ',g:1,dark:0,by:'course',v:CH('#ffffff','#ffffff','#111111','#6b7280','#ececec','#f4f4f5','#111111','#fff','#ffffff','#111111','#111111','#ffffff','#a3a3a3','#fafafa','#f3f3f3'),
+  pal:[['#f4f4f5','#18181b','#71717a'],['#ececee','#18181b','#52525b'],['#f8f8f9','#27272a','#a1a1aa'],['#e9e9eb','#18181b','#3f3f46'],['#f2f2f3','#27272a','#71717a'],['#ededee','#18181b','#52525b'],['#f6f6f7','#27272a','#a1a1aa'],['#e6e6e8','#18181b','#3f3f46']]},
+ charcoal:{n:'ถ่าน',g:1,dark:1,by:'course',v:CH('#0a0a0b','#121214','#f4f4f5','#8b8b94','#222226','#18181b','#f4f4f5','#111','#f4f4f5','#111','#18181b','#fafafa','#8b8b94','#151517','#19191c'),
+  pal:[['#1f1f23','#f4f4f5','#a1a1aa'],['#27272c','#f4f4f5','#d4d4d8'],['#1c1c20','#e4e4e7','#71717a'],['#2a2a2f','#f4f4f5','#a1a1aa'],['#222226','#f4f4f5','#d4d4d8'],['#2e2e33','#f4f4f5','#a1a1aa'],['#1a1a1e','#e4e4e7','#71717a'],['#25252a','#f4f4f5','#d4d4d8']]}
+};
+let S={term:'',courses:[],theme:'thaiday',colorBy:''};
+try{const raw=localStorage.getItem('kutable.v2')||localStorage.getItem('kutable.v1');if(raw)S=Object.assign(S,JSON.parse(raw))}catch(e){}
+if(!Array.isArray(S.courses))S.courses=[];
+if(S.themeV!==2){S.theme='thaiday';S.colorBy='';S.themeV=2}
+if(!THEMES[S.theme])S.theme='';
+S.courses.forEach((c,i)=>{if(typeof c.color!=='number')c.color=i%8});
+var VIEW=null,MINE=null;
+const save=()=>{const c=S.courses;if(VIEW)S.courses=MINE;try{localStorage.setItem('kutable.v2',JSON.stringify(S))}catch(e){}finally{S.courses=c}};
+const sysDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+const theme=()=>THEMES[S.theme]||(sysDark()?THEMES.forest:THEMES.leaf);
+const byDay=()=>(S.colorBy||theme().by)==='day';
+const cv=i=>{const p=theme().pal[(i??0)%8];return `--cb:${p[0]};--ci:${p[1]};--ce:${p[2]}`};
+const cvFor=(c,d)=>cv(byDay()?d:c.color);
+function applyTheme(){const t=theme(),r=document.documentElement.style;
+  Object.entries(t.v).forEach(([k,v])=>r.setProperty('--'+k,v));r.colorScheme=t.dark?'dark':'light';
+  const card=(k,x)=>`<button class="so${S.theme===k?' on':''}" data-th="${k}"><span class="s"><i style="background:${x.v.bg}"></i><i style="background:${x.pal[0][0]}"></i><i style="background:${x.dark?x.pal[0][2]:x.v.board}"></i></span><span class="t">${x.n}</span></button>`;
+  const by=S.colorBy||t.by;
+  $('pop').innerHTML=`<div class="lb">ระบายสีบล็อก</div><div class="seg2"><button data-cb="course" class="${by==='course'?'on':''}">ตามวิชา</button><button data-cb="day" class="${by==='day'?'on':''}">ตามวัน</button></div>`+
+   `<div class="lb">ธีมของคาบ</div><div class="grid3"><button class="so auto${!S.theme?' on':''}" data-th=""><span class="s"><i style="background:#f3f5f0"></i><i style="background:#0b100e"></i></span><span class="t">อัตโนมัติ</span></button>`+Object.entries(THEMES).filter(([,x])=>!x.g).map(([k,x])=>card(k,x)).join('')+'</div>'+
+   `<div class="lb">ธีมคลาสสิก</div><div class="grid3">`+Object.entries(THEMES).filter(([,x])=>x.g).map(([k,x])=>card(k,x)).join('')+'</div>';
+}
+
+/* ---------- parser ---------- */
+const DAYRX='(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun|Mo|Tu|We|Th|Fr|Sa|Su|จันทร์|อังคาร|พุธ|พฤหัสบดี|พฤหัส|ศุกร์|เสาร์|อาทิตย์|(?:พฤ|อา|จ|อ|พ|ศ|ส)(?:\\.|(?=\\s*\\d)))';
+const SESRX=new RegExp('(?<![A-Za-z])'+DAYRX+'\\s*[.,:]?\\s*(\\d{1,2})[:.](\\d{2})\\s*(?:-|–|—|~|ถึง|to)\\s*(\\d{1,2})[:.](\\d{2})','gi');
+const dayIdx=t=>{t=t.replace('.','').toLowerCase();
+  const m={mo:0,mon:0,monday:0,'จันทร์':0,'จ':0,tu:1,tue:1,tues:1,tuesday:1,'อังคาร':1,'อ':1,we:2,wed:2,wednesday:2,'พุธ':2,'พ':2,th:3,thu:3,thur:3,thurs:3,thursday:3,'พฤหัส':3,'พฤหัสบดี':3,'พฤ':3,fr:4,fri:4,friday:4,'ศุกร์':4,'ศ':4,sa:5,sat:5,saturday:5,'เสาร์':5,'ส':5,su:6,sun:6,sunday:6,'อาทิตย์':6,'อา':6};
+  return m[t]??-1};
+function parse(text){
+  text=text.replace(/\r/g,'');
+  const codeRx=/(?<!\d)(\d{8})(?:-\d{2})?(?!\d)/g;const hits=[];let m;
+  while((m=codeRx.exec(text)))hits.push({code:m[0],i:m.index,end:codeRx.lastIndex});
+  const out=[],noTime=[];
+  hits.forEach((h,k)=>{
+    const blk=text.slice(h.end,k+1<hits.length?hits[k+1].i:text.length);
+    const sessions=[];let sm;SESRX.lastIndex=0;
+    while((sm=SESRX.exec(blk))){
+      const d=dayIdx(sm[1]),s=+sm[2]*60+ +sm[3],e=+sm[4]*60+ +sm[5];
+      if(d<0||e<=s)continue;
+      const after=blk.slice(SESRX.lastIndex,SESRX.lastIndex+40);
+      let room='';const rm=/^[\s,|\/]*(?:ห้อง|room)?\s*[:.]?\s*([A-Za-zก-๙.]*\d[\w.\-ก-๙]*)/i.exec(after);
+      if(/^[\s,|\/]*(?:ห้อง|room)?\s*[:.]?\s*(?:ติดต่อผู้สอน|contact\s*teacher)/i.test(after))room='ติดต่อผู้สอน';else
+      if(rm&&!/^\d{1,2}[:.]\d{2}$/.test(rm[1])&&!/^\d{8}/.test(rm[1]))room=rm[1];
+      const kws=[...blk.slice(0,sm.index).matchAll(/ปฏิบัติ|บรรยาย|\blab\b|\blec(?:ture)?\b/gi)],kw=kws.length?kws[kws.length-1][0]:'';
+      const kind=/ปฏิบัติ|lab/i.test(kw)?'ปฏิบัติ':/บรรยาย|lec/i.test(kw)?'บรรยาย':'';
+      sessions.push({d,s,e,room,kind});
+    }
+    const LABEL=/^(?:credits?|หน่วยกิต|sec(?:tion)?|หมู่|กลุ่ม|lecture|lab(?:oratory)?|lec|บรรยาย|ปฏิบัติ|room|ห้อง|type|ประเภท|day|วัน|time|เวลา|instructor|อาจารย์|ผู้สอน|status|สถานะ|campus|วิทยาเขต|registered|ลงทะเบียน|course|วิชา|subject|name|ชื่อวิชา|no\.?|ลำดับ)(?![A-Za-z])\s*[:.]?\s*/i;
+    const dayTime=new RegExp('(?<![A-Za-z])'+DAYRX+'\\s*[.,:]?\\s*\\d{1,2}[:.]\\d{2}','i');
+    const segs=blk.split(/\n|\t|\s\|\s|\s{3,}/).map(x=>x.trim()).filter(Boolean);
+    let name='';
+    for(let sg of segs){
+      sg=sg.replace(/\d\s*\(\s*\d+\s*-\s*\d+\s*-\s*\d+\s*\)/g,' ');
+      const dt=dayTime.exec(sg);if(dt)sg=sg.slice(0,dt.index);
+      let prev;do{prev=sg;sg=sg.replace(LABEL,'').replace(/^[\d.,()\/\-\s]+(?=\S)/,'').trim()}while(sg!==prev);
+      sg=sg.replace(/\s*\(\s*\d{1,2}\s*\)\s*$/,'');
+      sg=sg.replace(/\s*(?:หมู่|sec(?:tion)?|credits?|หน่วยกิต)(?![A-Za-z]).*$/i,'').replace(/[\s\-–|,:]+$/,'').trim();
+      if(!/[A-Za-zก-๙]{3}/.test(sg))continue;
+      if(/^[A-Za-zก-๙.]{0,6}\.?\s?\d{1,3}-\d{2,4}\w*$/.test(sg))continue;
+      if(/^(?:lecture|lab|บรรยาย|ปฏิบัติ|credits?|หน่วยกิต|sec(?:tion)?|หมู่|room|ห้อง|mon|tue|wed|thu|fri|sat|sun|tba|-)$/i.test(sg))continue;
+      name=sg;break;
+    }
+    const cr=/(\d)\s*\(\s*\d+\s*-\s*\d+\s*-\s*\d+\s*\)/.exec(blk)||/[ก-๙A-Za-z)]\s*\(\s*(\d{1,2})\s*\)/.exec(blk)||/(?:credits?|หน่วยกิต)\s*[:.]?\s*(\d{1,2})(?![\d:])/i.exec(blk)||/(?<![\d:])(\d{1,2})\s*(?:credits?|หน่วยกิต)/i.exec(blk);
+    const secs=[...blk.matchAll(/(?:หมู่|sec(?:tion)?|กลุ่ม|\blab\b|\blecture\b)\s*(?:บรรยาย|ปฏิบัติ)?\s*[:.]?\s*(\d{3})(?![\d:.])/gi)].map(x=>x[1]);
+    const prev=out.find(o=>key(o.code)===key(h.code));
+    if(prev){prev.sessions.push(...sessions);secs.forEach(x=>{if(!prev.sec.split('/').includes(x))prev.sec+=(prev.sec?'/':'')+x});if(!prev.name&&name)prev.name=name;return}
+    const c={id:uid(),code:h.code,name,credits:cr?+cr[1]:'',sec:[...new Set(secs)].join('/'),sessions};
+    out.push(c);
+  });
+  out.forEach(c=>{if(!c.sessions.length)noTime.push(c.code)});
+  return {courses:out,noTime};
+}
+
+
+
+function fromJSON(t){
+  let raw=t.trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+  const a=raw.indexOf('['),o=raw.indexOf('{');if(a<0&&o<0)return null;
+  if(!/^[\[{]/.test(raw))raw=raw.slice(a>=0&&(o<0||a<o)?a:o);
+  let j;try{j=JSON.parse(raw)}catch(e){return null}
+  if(!Array.isArray(j))j=Array.isArray(j.courses)?j.courses:[j];
+  const courses=[],noTime=[];
+  j.forEach(x=>{if(!x||typeof x!=='object')return;
+    const cm=/(\d{8})(-\d{2})?/.exec(String(x.code??''));const code=cm?cm[0]:String(x.code??'').trim();
+    const sessions=(Array.isArray(x.sessions)?x.sessions:[]).map(z=>({d:dayIdx(String(z.day??'')),s:pm(z.start??''),e:pm(z.end??''),room:String(z.room??'').trim(),kind:/ปฏิบัติ|lab/i.test(z.type??'')?'ปฏิบัติ':/บรรยาย|lec/i.test(z.type??'')?'บรรยาย':''})).filter(z=>z.d>=0&&!isNaN(z.s)&&!isNaN(z.e)&&z.e>z.s);
+    const cr=Number(x.credits);
+    const exams=(Array.isArray(x.exams)?x.exams:[]).map(z=>({kind:String(z.kind??'').trim(),date:String(z.date??'').trim(),start:String(z.start??'').trim(),end:String(z.end??'').trim()})).filter(z=>z.date);
+    const c={id:uid(),exams,code,name:String(x.name??'').trim(),credits:Number.isFinite(cr)&&x.credits!==null&&x.credits!==''?cr:'',sec:String(x.sec??'').trim(),sessions};
+    if(!c.code&&!c.name)return;courses.push(c);if(!sessions.length)noTime.push(c.code||c.name)});
+  return {courses,noTime};
+}
+
+
+function clashes(){
+  const all=[];S.courses.forEach(c=>c.sessions.forEach((s,i)=>all.push({c,s,i})));
+  const set=new Set(),pairs=new Set();
+  for(let a=0;a<all.length;a++)for(let b=a+1;b<all.length;b++){const x=all[a],y=all[b];
+    if(x.c!==y.c&&x.s.d===y.s.d&&x.s.s<y.s.e&&y.s.s<x.s.e){set.add(x.c.id+':'+x.i);set.add(y.c.id+':'+y.i);pairs.add([x.c.code,y.c.code].sort().join('|'))}}
+  return {set,pairs};
+}
+
+/* views */
+const VIEWS=[['week','ตาราง','<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'],['import','นำเข้า','<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'],['courses','วิชา','<path d="M5 4h11l3 3v13H5z"/><path d="M9 11h6M9 15h6"/>']];
+$('tabs').innerHTML=VIEWS.map(([k,n,p])=>`<a href="#${k}" data-v="${k}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>${n}</a>`).join('');
+function route(){const v=(location.hash||'#week').slice(1),ok=VIEWS.some(x=>x[0]===v)?v:'week';
+  VIEWS.forEach(([k])=>{$('v-'+k).hidden=k!==ok});document.querySelectorAll('[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v===ok))}
+const go=v=>{if(location.hash!=='#'+v)location.hash=v;else route()};
+
+/* render */
+let selDay=null;
+function board(now,today,nm){
+  const all=[];S.courses.forEach(c=>c.sessions.forEach(s=>all.push({c,s})));
+  if(!all.length){$('board').innerHTML=`<span class="lbl">เริ่มต้น</span><div class="bn">ยังไม่มีตารางเรียน</div><div class="bm">วางรายวิชาจาก MyKU แล้วตรงนี้จะบอกคาบถัดไปทุกครั้งที่เปิด</div><div class="cd"><button class="b a" id="bGo">นำเข้าวิชา</button></div>`;$('bGo').onclick=()=>go('import');return}
+  const W=7*1440,cur=all.find(x=>x.s.d===today&&x.s.s<=nm&&nm<x.s.e);
+  const nx=all.map(x=>({...x,dt:((x.s.d-today)*1440+x.s.s-nm+W)%W})).filter(x=>x!==cur&&!(x.s.d===today&&x.s.s<=nm&&nm<x.s.e)).sort((a,b)=>a.dt-b.dt)[0];
+  const meta=x=>`<b>${fm(x.s.s)}–${fm(x.s.e)}</b> · ${esc(x.s.room||'ไม่ระบุห้อง')} · ${esc(x.c.code)}${x.c.sec?' · Sec '+esc(x.c.sec):''}`;
+  const hm=m=>m>=60?[Math.floor(m/60)+':'+String(m%60).padStart(2,'0'),'ชม.']:[m,'นาที'];
+  if(cur){const left=cur.s.e-nm,pct=(nm-cur.s.s)/(cur.s.e-cur.s.s)*100,[v,u]=hm(left);
+    $('board').innerHTML=`<span class="lbl live">กำลังเรียน</span><div class="bn">${esc(cur.c.name||cur.c.code)}</div><div class="bm">${meta(cur)}</div><div class="cd"><span class="unit">เหลือ</span><span class="big num">${v}</span><span class="unit">${u}</span></div><div class="prog"><i style="width:${pct.toFixed(1)}%"></i></div>`;
+  }else if(nx){const when=nx.s.d===today&&nx.dt<1440?'วันนี้':nx.s.d===(today+1)%7&&nx.dt<2880?'พรุ่งนี้':'วัน'+DAYS[nx.s.d];
+    const [v,u]=nx.dt<1440?hm(nx.dt):[Math.round(nx.dt/1440),'วัน'];
+    $('board').innerHTML=`<span class="lbl">ถัดไป · ${when}</span><div class="bn">${esc(nx.c.name||nx.c.code)}</div><div class="bm">${meta(nx)}</div><div class="cd"><span class="unit">อีก</span><span class="big num">${v}</span><span class="unit">${u}</span></div>`}
+}
+function dayView(today,nm,set){
+  const C=S.courses,ses=C.flatMap(c=>c.sessions);
+  if(!ses.length){$('dayv').innerHTML='';return}
+  const days=[0,1,2,3,4].concat([5,6].filter(d=>ses.some(s=>s.d===d)));
+  if(selDay===null||!days.includes(selDay))selDay=days.includes(today)?today:days[0];
+  const cnt=d=>ses.filter(s=>s.d===d).length;
+  let h=`<div class="dchips" style="--dn:${days.length}" role="tablist">${days.map(d=>`<button class="dchip${d===selDay?' on':''}${d===today?' today':''}" data-day="${d}" role="tab" aria-selected="${d===selDay}"><span>${SD[d]}</span><small>${cnt(d)?cnt(d)+' คาบ':'ว่าง'}</small></button>`).join('')}</div>`;
+  const items=[];C.forEach(c=>c.sessions.forEach((s,i)=>{if(s.d===selDay)items.push({c,s,i})}));items.sort((a,b)=>a.s.s-b.s.s);
+  const tot=items.reduce((a,x)=>a+x.s.e-x.s.s,0);
+  h+=`<div class="dlist" id="dlist"><div class="dh"><span>วัน${DAYS[selDay]}${selDay===today?' · วันนี้':''}</span><span>${items.length?`${items.length} คาบ · ${dur(tot)}`:''}</span></div>`;
+  if(!items.length)h+='<div class="dnone">ไม่มีเรียนวันนี้</div>';
+  const roomTxt=r=>/^contact\s*teacher$/i.test(r||'')?'ติดต่อผู้สอน':r;
+  items.forEach((x,k)=>{const {c,s}=x;
+    if(k){const g=s.s-items[k-1].s.e;if(g>=30)h+=`<div class="gap">ว่าง ${dur(g)}</div>`}
+    const isT=selDay===today,cur=isT&&s.s<=nm&&nm<s.e,past=isT&&s.e<=nm;
+    const meta=[roomTxt(s.room)||(s.kind==='ปฏิบัติ'?'แล็บ':''),c.sec?'sec '+c.sec:'',s.kind].filter(Boolean).join(' · ');
+    h+=`<button class="drow${cur?' cur':''}${past?' past':''}${set.has(c.id+':'+x.i)?' clash':''}" data-id="${esc(c.id)}" style="${cvFor(c,selDay)}"><span class="dt num"><b>${fm(s.s)}</b><small>${fm(s.e)}</small></span><span class="card2"><span class="c">${esc(c.code)}</span><span class="n">${esc(c.name||c.code)}</span><span class="m">${esc(meta)}</span>${cur?`<span class="live">เหลือ ${dur(s.e-nm)}<i><b style="width:${((nm-s.s)/(s.e-s.s)*100).toFixed(1)}%"></b></i></span>`:''}</span></button>`});
+  $('dayv').innerHTML=h+'</div>';
+}
+function render(){
+  const C=S.courses,{set,pairs}=clashes(),ses=C.flatMap(c=>c.sessions);
+  const now=new Date(),today=(now.getDay()+6)%7,nm=now.getHours()*60+now.getMinutes();
+  board(now,today,nm);
+  const cr=C.reduce((a,c)=>a+(+c.credits||0),0);
+  const narrow=matchMedia('(max-width:699px)').matches,vw=S.vw||(narrow?'day':'week');
+  document.body.classList.toggle('dv',vw==='day'&&ses.length>0);
+  $('tbar').innerHTML=`<span class="st"><b class="num">${C.length}</b>วิชา</span><span class="st"><b class="num">${cr}</b>หน่วยกิต</span><span class="st"><b class="num">${(ses.reduce((a,s)=>a+s.e-s.s,0)/60).toFixed(1).replace('.0','')}</b>ชม./สัปดาห์</span>`+(pairs.size?`<span class="st bad"><b class="num">${pairs.size}</b>คู่เวลาชน</span>`:'')+(ses.length?`<button class="b xb sb" data-act="share" aria-label="แชร์ตาราง"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>แชร์</span></button><button class="b xb" data-act="export" aria-label="บันทึกตารางเป็นรูป"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>บันทึกรูป</span></button><div class="vseg" role="group" aria-label="มุมมอง"><button data-vw="day" class="${vw==='day'?'on':''}" aria-pressed="${vw==='day'}">รายวัน</button><button data-vw="week" class="${vw==='week'?'on':''}" aria-pressed="${vw==='week'}">ทั้งสัปดาห์</button></div>`:'');
+  dayView(today,nm,set);
+  if(!ses.length){$('week').innerHTML=`<div class="empty">ตารางยังว่าง<br><button class="b p" id="eGo">นำเข้าวิชาจาก MyKU</button></div>`;$('eGo').onclick=()=>go('import')}
+  else{
+    let lo=8*60,hi=17*60;ses.forEach(s=>{lo=Math.min(lo,Math.floor(s.s/60)*60);hi=Math.max(hi,Math.ceil(s.e/60)*60)});
+    const span=hi-lo,n=span/60,EN=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+    const days=[0,1,2,3,4].concat([5,6].filter(d=>ses.some(s=>s.d===d)));
+    const roomTxt=r=>/^contact\s*teacher$/i.test(r||'')?'ติดต่อผู้สอน':r,PIN='<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>';
+    let w=`<div class="wg" style="--n:${n}"><div class="wr hd"><div class="wd"></div><div class="wt">${Array.from({length:n},(_,k)=>`<span class="num">${fm(lo+k*60)}</span>`).join('')}</div></div>`;
+    days.forEach(d=>{
+      const items=[];C.forEach(c=>c.sessions.forEach((s,i)=>{if(s.d===d)items.push({c,s,i})}));items.sort((a,b)=>a.s.s-b.s.s);
+      const lanes=[];items.forEach(it=>{let l=lanes.findIndex(e=>e<=it.s.s);if(l<0){l=lanes.length;lanes.push(0)}lanes[l]=it.s.e;it.l=l});
+      const big=matchMedia('(max-width:1000px)').matches,L=Math.max(1,lanes.length),RH=L>1?L*(big?96:90)+8:(big?112:104),lh=(RH-8)/L;
+      w+=`<div class="wr"><div class="wd${d===today?' today':''}"><span>${EN[d]}</span></div><div class="lane${d===today?' today':''}" style="--rh:${RH}px">`;
+      items.forEach(it=>{const {c,s}=it,cl=set.has(c.id+':'+it.i);
+        const meta=roomTxt(s.room)||(s.kind==='ปฏิบัติ'?'แล็บ':s.kind)||'';
+        const sh=(s.e-s.s)<=75,tip=[c.code,c.name,`${DAYS[d]} ${fm(s.s)}–${fm(s.e)}`,roomTxt(s.room)?'ห้อง '+roomTxt(s.room):'',c.sec?'sec '+c.sec:'',s.kind].filter(Boolean).join('\n');
+        w+=`<button class="ev${cl?' clash':''}${sh?' sh':''}" data-id="${esc(c.id)}" data-k="${esc(c.id)}" data-tip="${esc(tip)}" style="${cvFor(c,d)};left:calc(${(s.s-lo)/span*100}% + ${sh?3:5}px);width:calc(${(s.e-s.s)/span*100}% - ${sh?6:10}px);top:${4+it.l*lh}px;height:${lh-8}px" aria-label="${esc(tip.replace(/\n/g,' · '))}"><span class="c">${esc(key(c.code)||c.code)}</span><span class="n">${esc(c.name||'')}</span>${meta?`<span class="m">${PIN}<span>${esc(meta)}</span></span>`:''}</button>`});
+      if(d===today&&nm>lo&&nm<hi)w+=`<div class="nowl" style="left:${(nm-lo)/span*100}%"></div>`;
+      w+='</div></div>'});
+    $('week').innerHTML=w+'</div>';
+  }
+  $('clist').innerHTML=C.length?C.map(c=>{const mine=[...pairs].filter(p=>p.split('|').includes(c.code)).map(p=>p.split('|').find(x=>x!==c.code));
+    return `<div class="ci" style="${cv(c.color)}"><span class="bar6"></span><div><div class="nm">${esc(c.name||'(ไม่มีชื่อ)')}</div><div class="sub"><span class="num">${esc(c.code)}</span>${c.sec?' · Sec '+esc(c.sec):''} · ${c.sessions.length?c.sessions.map(s=>SD[s.d]+' '+fm(s.s)+'–'+fm(s.e)).join(', '):'<span class="x">ไม่มีคาบในตาราง</span>'}${mine.length?` · <span class="x">ชนกับ ${esc(mine.join(', '))}</span>`:''}</div></div><div class="cr num">${c.credits===''?'–':esc(c.credits)}<small>หน่วยกิต</small></div><button class="ic" data-id="${esc(c.id)}">แก้ไข</button></div>`}).join('')+`<div class="tot"><span>รวมทั้งเทอม</span><span><b class="num">${cr}</b> หน่วยกิต</span></div>`:'<div class="card hint">ยังไม่มีวิชา ไปที่ “นำเข้า” หรือกด “เพิ่มวิชาเอง”</div>';
+}
+
+/* actions */
+let undoState=null,undoPaste=null,tt;
+function toast(t,canUndo){$('tmsg').textContent=t;$('undo').style.display=canUndo?'':'none';$('toast').classList.add('show');clearTimeout(tt);tt=setTimeout(()=>$('toast').classList.remove('show'),5000)}
+function snap(){undoState=JSON.stringify(S.courses);undoPaste=null}
+$('undo').onclick=()=>{if(undoState){S.courses=JSON.parse(undoState);undoState=null;if(undoPaste!==null){$('paste').value=undoPaste;undoPaste=null}save();render()}$('toast').classList.remove('show')};
+function msg(html,warn){const m=$('msg');m.innerHTML=html;m.className='msg show'+(warn?' warn':'')}
+function importText(t){
+  const tk=tokFrom(t);if(tk){enterView(tk);return}
+  if(VIEW)exitView(false);
+  const {courses,noTime}=fromJSON(t)||parse(t);
+  if(!courses.length){msg('ไม่พบรหัสวิชา 8 หลักในข้อความ ลองคัดลอกให้ติดคอลัมน์รหัสวิชามาด้วย หรือใช้ prompt ให้ AI ช่วย',true);return}
+  snap();const used=new Set(S.courses.map(c=>c.color));
+  courses.forEach(c=>{const old=S.courses.find(o=>key(o.code)===key(c.code));
+    if(old){if(!c.name)c.name=old.name;Object.assign(old,c,{id:old.id,color:old.color})}
+    else{let k=0;while(used.has(k)&&k<8)k++;c.color=k%8;used.add(c.color);S.courses.push(c)}});
+  save();render();
+  msg(`เพิ่ม/อัปเดต ${courses.length} วิชา ${courses.reduce((a,c)=>a+c.sessions.length,0)} คาบ`+(noTime.length?`<br>${esc(noTime.join(', '))} ไม่มีวันเวลาเรียน (ยังนับหน่วยกิต)`:'')+` · <a href="#week">ดูตาราง</a>`);
+}
+$('go').onclick=()=>importText($('paste').value);
+$('clearPaste').onclick=()=>{$('paste').value='';$('msg').className='msg';$('paste').focus()};
+$('cpPrompt').onclick=async()=>{const ta=$('promptTxt');try{await navigator.clipboard.writeText(ta.value);toast('คัดลอก prompt แล้ว')}catch(e){ta.focus();ta.select();toast('กด Ctrl/⌘+C เพื่อคัดลอกข้อความที่เลือกไว้')}};
+const DEMO=`ตัวอย่าง (ไม่ใช่ข้อมูลจริง)
+01005111-64	พันธุศาสตร์เบื้องต้น	3(2-3-6)	หมู่ 800	บรรยาย	MON 09:00-11:00	LH3-201
+	หมู่ 850	ปฏิบัติ	WED 13:00-16:00	ศว.Lab2
+01007331-65	กีฏวิทยาทั่วไป	3(2-3-6)	หมู่ 800	บรรยาย	TUE 10:00-12:00	LH4-301
+	หมู่ 850	ปฏิบัติ	THU 13:00-16:00	ศว.Lab1
+01417167-65	สถิติเบื้องต้น	3(3-0-6)	หมู่ 800	บรรยาย	FRI 09:00-12:00	LH2-104
+01009241-66	พืชสวนเบื้องต้น	3(2-3-6)	หมู่ 800	บรรยาย	MON 13:00-15:00	LH1-105
+	หมู่ 850	ปฏิบัติ	WED 14:00-17:00	แปลงพืชสวน`;
+$('demo').onclick=()=>{$('paste').value=DEMO;importText(DEMO)};
+$('clear').onclick=()=>{if(!S.courses.length&&!$('paste').value)return;snap();undoPaste=$('paste').value;S.courses=[];save();render();$('paste').value='';$('msg').className='msg';toast('ล้างตารางและช่องวางข้อความแล้ว',true)};
+$('thBtn').onclick=e=>{e.stopPropagation();$('pop').classList.toggle('show')};
+$('pop').onclick=e=>{e.stopPropagation();const b=e.target.closest('[data-th]'),cb=e.target.closest('[data-cb]');if(cb){S.colorBy=cb.dataset.cb;save();applyTheme();render();return}if(!b)return;S.theme=b.dataset.th;S.colorBy='';save();applyTheme();render();$('pop').classList.remove('show')};
+document.addEventListener('click',e=>{if(!e.target.closest('.tm'))$('pop').classList.remove('show');const b=e.target.closest('[data-id]');if(b&&!b.closest('.md'))openEd(b.dataset.id)});
+
+const hl=(id,on)=>document.querySelectorAll('.ev[data-k="'+CSS.escape(id)+'"]').forEach(e=>e.classList.toggle('hl',on));
+$('week').addEventListener('mouseover',e=>{const b=e.target.closest('.ev');if(b)hl(b.dataset.k,true)});
+$('week').addEventListener('mouseout',e=>{const b=e.target.closest('.ev');if(b)hl(b.dataset.k,false)});
+$('week').addEventListener('focusin',e=>{const b=e.target.closest('.ev');if(b)hl(b.dataset.k,true)});
+$('week').addEventListener('focusout',e=>{const b=e.target.closest('.ev');if(b)hl(b.dataset.k,false)});
+document.addEventListener('click',e=>{const v=e.target.closest('[data-vw]');if(v){S.vw=v.dataset.vw;save();render();return}
+  const d=e.target.closest('[data-day]');if(d){selDay=+d.dataset.day;render()}});
+let tx=null,ty=0;
+$('dayv').addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY},{passive:true});
+$('dayv').addEventListener('touchend',e=>{if(tx===null)return;const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;tx=null;
+  if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*.7)return;
+  const ds=[...document.querySelectorAll('.dchip')].map(b=>+b.dataset.day),i=ds.indexOf(selDay),n=ds[i+(dx<0?1:-1)];
+  if(n!==undefined){selDay=n;render()}},{passive:true});
+/* export image */
+const seg=typeof Intl!=='undefined'&&Intl.Segmenter?new Intl.Segmenter('th',{granularity:'word'}):null;
+const words=t=>seg?[...seg.segment(t)].map(x=>x.segment):String(t).split(/(?<=\s)/);
+function ell(x,t,w){t=String(t||'');if(x.measureText(t).width<=w)return t;while(t&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…'}
+function wrap(x,t,w,max){const out=[];let line='';for(const p of words(String(t||''))){if(x.measureText(line+p).width<=w||!line){line+=p}else{out.push(line.trim());line=p.trimStart()}}if(line)out.push(line.trim());
+  if(out.length>max){const k=out.slice(0,max);k[max-1]=ell(x,k[max-1]+' '+out[max].slice(0,4),w);return k}return out}
+function rr(x,X,Y,W,H,r){x.beginPath();x.roundRect?x.roundRect(X,Y,W,H,r):x.rect(X,Y,W,H)}
+async function drawSchedule(mode){
+  try{await document.fonts.ready}catch(e){}
+  const t=theme(),V=t.v,C=S.courses,ses=C.flatMap(c=>c.sessions),SC=2;
+  let lo=8*60,hi=17*60;ses.forEach(s=>{lo=Math.min(lo,Math.floor(s.s/60)*60);hi=Math.max(hi,Math.ceil(s.e/60)*60)});
+  const days=[0,1,2,3,4].concat([5,6].filter(d=>ses.some(s=>s.d===d))),EN=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const F='"Kanit",sans-serif',G='"Space Grotesk","Kanit",sans-serif';
+  const pal=(c,d)=>t.pal[(byDay()?d:c.color)%8];
+  const room=r=>/^contact\s*teacher$/i.test(r||'')?'ติดต่อผู้สอน':(r||'');
+  const land=mode==='land',W=land?1800:1080,PAD=land?56:48;
+  const cnv=document.createElement('canvas'),x=cnv.getContext('2d');
+  const rows=days.map(d=>{const it=[];C.forEach(c=>c.sessions.forEach(s=>{if(s.d===d)it.push({c,s})}));it.sort((a,b)=>a.s.s-b.s.s);const ln=[];it.forEach(o=>{let l=ln.findIndex(e=>e<=o.s.s);if(l<0){l=ln.length;ln.push(0)}ln[l]=o.s.e;o.l=l});return {d,it,L:Math.max(1,ln.length)}});
+  const H=land?PAD+96+56+rows.reduce((a,r)=>a+(r.L>1?r.L*96:132),0)+PAD+40:1920;
+  cnv.width=W*SC;cnv.height=H*SC;x.scale(SC,SC);
+  x.fillStyle=V.bg;x.fillRect(0,0,W,H);
+  // header
+  x.fillStyle=V.ink;x.font=`700 ${land?40:44}px ${F}`;x.textBaseline='alphabetic';x.fillText('ตารางเรียน',PAD,PAD+40);
+  x.font=`500 ${land?20:24}px ${F}`;x.fillStyle=V.mute;x.fillText(S.term||$('term').value||'',PAD,PAD+(land?74:80));
+  x.textAlign='right';x.font=`700 24px ${F}`;x.fillStyle=V.pri==='#ffffff'?V.ink:V.pri;x.fillText('คาบ',W-PAD,PAD+34);
+  const cr=C.reduce((a,c)=>a+(+c.credits||0),0);x.font=`500 18px ${F}`;x.fillStyle=V.mute;x.fillText(`${C.length} วิชา · ${cr} หน่วยกิต`,W-PAD,PAD+(land?70:76));x.textAlign='left';
+  if(land){
+    const top=PAD+96,DW=110,GW=W-PAD*2-DW,span=hi-lo,px=GW/span,n=span/60,gx=PAD+DW;
+    rr(x,PAD,top,W-PAD*2,H-top-PAD-40,20);x.fillStyle=V.sf;x.fill();x.save();x.clip();
+    x.font=`500 16px ${G}`;x.fillStyle=V.mute;for(let k=0;k<n;k++)x.fillText(fm(lo+k*60),gx+k*60*px+12,top+36);
+    let y=top+56;x.strokeStyle=V.line;x.lineWidth=1;
+    rows.forEach(r=>{const RH=r.L>1?r.L*96:132;x.beginPath();x.moveTo(PAD,y);x.lineTo(W-PAD,y);x.stroke();
+      for(let k=0;k<=n;k++){x.beginPath();x.moveTo(gx+k*60*px,y);x.lineTo(gx+k*60*px,y+RH);x.stroke()}
+      x.fillStyle=V.ink;x.font=`700 20px ${F}`;x.textAlign='center';x.fillText(EN[r.d],PAD+DW/2,y+RH/2+7);x.textAlign='left';
+      const lh=(RH-12)/r.L;
+      r.it.forEach(({c,s,l})=>{const p=pal(c,r.d),bx=gx+(s.s-lo)*px+5,bw=(s.e-s.s)*px-10,by=y+6+l*lh,bh=lh-6,iw=bw-24;
+        rr(x,bx,by,bw,bh,14);x.fillStyle=p[0];x.fill();
+        const rm=room(s.room)||(s.kind==='ปฏิบัติ'?'แล็บ':s.kind)||'';x.font=`600 19px ${F}`;const nl=wrap(x,c.name||c.code,iw,bh>110?2:1),th=20+nl.length*24+(rm?24:0);let yy=by+(bh-th)/2+14;
+        x.fillStyle=p[1];x.globalAlpha=.72;x.font=`700 15px ${G}`;x.fillText(ell(x,key(c.code),iw),bx+12,yy);x.globalAlpha=1;yy+=24;
+        x.font=`600 19px ${F}`;nl.forEach(l=>{x.fillText(ell(x,l,iw),bx+12,yy);yy+=24});
+        if(rm){x.font=`500 16px ${F}`;x.fillText(ell(x,'⌖ '+rm,iw),bx+12,yy)}});
+      y+=RH});
+    x.restore();
+  }else{
+    const top=PAD+120,TW=64,GW=W-PAD*2-TW,cw=GW/days.length,span=hi-lo,bot=H-PAD-60,px=(bot-top-56)/span,gy=top+56;
+    rr(x,PAD,top,W-PAD*2,bot-top,24);x.fillStyle=V.sf;x.fill();x.save();x.clip();
+    x.strokeStyle=V.line;x.lineWidth=1;
+    for(let k=0;k<=span/60;k++){const yy=gy+k*60*px;x.beginPath();x.moveTo(PAD+TW,yy);x.lineTo(W-PAD,yy);x.stroke();if(k<span/60){x.fillStyle=V.mute;x.font=`500 15px ${G}`;x.textAlign='right';x.fillText(fm(lo+k*60).replace(/^0/,''),PAD+TW-10,yy+18);x.textAlign='left'}}
+    rows.forEach((r,i)=>{const cx=PAD+TW+i*cw;x.beginPath();x.moveTo(cx,top);x.lineTo(cx,bot);x.stroke();
+      x.fillStyle=V.ink;x.font=`700 20px ${F}`;x.textAlign='center';x.fillText(SD[r.d],cx+cw/2,top+36);x.textAlign='left';
+      r.it.forEach(({c,s})=>{const p=pal(c,r.d),bx=cx+4,bw=cw-8,by=gy+(s.s-lo)*px+3,bh=(s.e-s.s)*px-6,iw=bw-16;
+        rr(x,bx,by,bw,bh,12);x.fillStyle=p[0];x.fill();x.fillStyle=p[1];
+        let yy=by+24;x.globalAlpha=.72;x.font=`700 13px ${G}`;x.fillText(ell(x,key(c.code),iw),bx+8,yy);x.globalAlpha=1;yy+=22;
+        const rm=room(s.room)||(s.kind==='ปฏิบัติ'?'แล็บ':s.kind)||'';x.font=`600 17px ${F}`;const ml=Math.max(1,Math.floor((bh-(rm?54:34))/22));wrap(x,c.name||c.code,iw,Math.min(ml,5)).forEach(l=>{if(yy<by+bh-(rm?26:6)){x.fillText(l,bx+8,yy);yy+=22}});
+        if(rm&&yy<by+bh-2){x.font=`500 14px ${F}`;x.fillText(ell(x,rm,iw),bx+8,Math.min(yy+2,by+bh-8))}});
+    });
+    x.restore();
+  }
+  x.fillStyle=V.mute;x.font=`400 15px ${F}`;x.textAlign='center';x.fillText('สร้างด้วย คาบ · IG @daen6_',W/2,H-PAD/2-4);
+  return new Promise(r=>cnv.toBlob(r,'image/png'));
+}
+let expMode='land',expUrl=null,expBlob=null;
+async function openExport(){
+  $('xov').classList.add('show');$('xImg').removeAttribute('src');$('xImg').alt='กำลังสร้างรูป…';
+  document.querySelectorAll('[data-xm]').forEach(b=>b.classList.toggle('on',b.dataset.xm===expMode));
+  expBlob=await drawSchedule(expMode);if(expUrl)URL.revokeObjectURL(expUrl);expUrl=URL.createObjectURL(expBlob);
+  $('xImg').src=expUrl;$('xImg').alt='ตัวอย่างรูปตารางเรียน';$('xDl').href=expUrl;$('xDl').download=`khab-schedule-${expMode==='land'?'landscape':'phone'}.png`;
+}
+
+document.addEventListener('click',e=>{if(e.target.closest('[data-act=export]'))openExport();const m=e.target.closest('[data-xm]');if(m){expMode=m.dataset.xm;openExport()}});
+$('xClose').onclick=()=>$('xov').classList.remove('show');$('xov').onclick=e=>{if(e.target===$('xov'))$('xov').classList.remove('show')};
+try{if(navigator.canShare&&navigator.canShare({files:[new File([''],'a.png',{type:'image/png'})]}))$('xShare').hidden=false}catch(e){}
+let DLNS=null;try{if(window.claude&&typeof claude.use==='function')claude.use('downloads').then(n=>{DLNS=n}).catch(()=>{})}catch(e){}
+$('xDl').addEventListener('click',async e=>{if(!expBlob){e.preventDefault();return}if(!DLNS)return;e.preventDefault();
+  try{await DLNS.save({filename:$('xDl').download,data:expBlob});toast('บันทึกรูปแล้ว')}catch(err){if(err&&err.code!=='declined')toast('บันทึกไม่ได้ในหน้านี้ ลองกดค้างหรือคลิกขวาที่รูปแทน')}});
+$('xShare').onclick=async()=>{try{await navigator.share({files:[new File([expBlob],$('xDl').download,{type:'image/png'})],title:'ตารางเรียน'})}catch(e){}};
+const tipEl=document.createElement('div');tipEl.className='tip';tipEl.setAttribute('aria-hidden','true');document.body.appendChild(tipEl);
+const fine=matchMedia('(hover:hover) and (pointer:fine)');
+$('week').addEventListener('mouseover',e=>{const b=e.target.closest('.ev');if(!b||!fine.matches)return;const L=b.dataset.tip.split('\n');
+  tipEl.innerHTML='<b>'+esc(L[1]||L[0])+'</b><br>'+L.filter((x,i)=>i!==1).map(esc).join('<br>');
+  const r=b.getBoundingClientRect();tipEl.classList.add('show');const tw=tipEl.offsetWidth,th=tipEl.offsetHeight;
+  let x=Math.min(Math.max(8,r.left+r.width/2-tw/2),innerWidth-tw-8),y=r.top-th-8;if(y<8)y=r.bottom+8;tipEl.style.left=x+'px';tipEl.style.top=y+'px'});
+$('week').addEventListener('mouseout',e=>{if(e.target.closest('.ev'))tipEl.classList.remove('show')});
+addEventListener('scroll',()=>tipEl.classList.remove('show'),{passive:true});
+/* share + backup */
+const SITE='https://ku-khab.vercel.app/';
+const KIND=['','บรรยาย','ปฏิบัติ'];
+const b64u={enc:u8=>{let s='';u8.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')},
+  dec:t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}};
+const pack=(courses,name)=>({v:1,n:name||'',t:S.term||'',c:courses.map(c=>[c.code,c.name||'',c.credits===''?null:c.credits,c.sec||'',c.sessions.map(s=>[s.d,s.s,s.e,s.room||'',Math.max(0,KIND.indexOf(s.kind||''))]),c.color??0,(c.exams||[]).map(x=>[x.kind,x.date,x.start,x.end])])});
+const unpack=o=>({name:String(o.n||'').slice(0,40),term:String(o.t||'').slice(0,60),courses:(Array.isArray(o.c)?o.c:[]).slice(0,40).map(a=>({id:uid(),code:String(a[0]||'').slice(0,20),name:String(a[1]||'').slice(0,120),credits:a[2]==null?'':Number(a[2])||0,sec:String(a[3]||'').slice(0,30),
+  sessions:(Array.isArray(a[4])?a[4]:[]).slice(0,30).map(s=>({d:+s[0],s:+s[1],e:+s[2],room:String(s[3]||'').slice(0,40),kind:KIND[+s[4]]||''})).filter(s=>s.d>=0&&s.d<7&&s.e>s.s&&s.s>=0&&s.e<=1440),
+  color:(+a[5]||0)%8,exams:(Array.isArray(a[6])?a[6]:[]).slice(0,6).map(x=>({kind:String(x[0]||''),date:String(x[1]||''),start:String(x[2]||''),end:String(x[3]||'')}))}))});
+async function encodeShare(courses,name){
+  const raw=new TextEncoder().encode(JSON.stringify(pack(courses,name)));
+  try{if(typeof CompressionStream==='function'){const z=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());return 'z'+b64u.enc(z)}}catch(e){}
+  return 'j'+b64u.enc(raw);
+}
+async function decodeShare(tok){
+  tok=String(tok||'').trim();const k=tok[0],body=tok.slice(1);let u=b64u.dec(body);
+  if(k==='z'){if(typeof DecompressionStream!=='function')throw new Error('nodecomp');u=new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+  else if(k!=='j')throw new Error('bad');
+  return unpack(JSON.parse(new TextDecoder().decode(u)));
+}
+const tokFrom=t=>{const m=/[?&]t=([zj][A-Za-z0-9_-]+)/.exec(String(t||''));return m?m[1]:null};
+async function saveFile(name,blob){
+  if(DLNS){try{await DLNS.save({filename:name,data:blob});return true}catch(e){if(e&&e.code==='declined')return false}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return true}catch(e){return false}
+}
+const toJSONBackup=()=>JSON.stringify(S.courses.map(c=>({code:c.code,name:c.name,credits:c.credits===''?null:c.credits,sec:c.sec,sessions:c.sessions.map(s=>({day:['MON','TUE','WED','THU','FRI','SAT','SUN'][s.d],start:fm(s.s),end:fm(s.e),room:s.room||'',type:s.kind||''})),exams:c.exams||[]})),null,1);
+let qrLib=null;
+const loadQR=()=>qrLib||(qrLib=new Promise((res,rej)=>{if(window.qrcode)return res(window.qrcode);const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';sc.onload=()=>window.qrcode?res(window.qrcode):rej();sc.onerror=rej;document.head.appendChild(sc)}));
+let shareUrl='';
+async function openShare(){
+  if(!S.courses.length){toast('ยังไม่มีตารางให้แชร์ นำเข้าวิชาก่อนนะ');return}
+  $('shName').value=S.me||'';$('sov').classList.add('show');await refreshShare();
+}
+async function refreshShare(){
+  const tok=await encodeShare(S.courses,$('shName').value.trim());shareUrl=SITE+'?t='+tok;
+  $('shLink').value=shareUrl;$('shLen').textContent=shareUrl.length>1800?'ลิงก์ยาวมาก บางแอปอาจตัดลิงก์ ลองส่งเป็น QR หรือไฟล์แทน':'';
+  const box=$('shQR');box.innerHTML='<span class="hint">กำลังสร้าง QR…</span>';
+  try{const qr=await loadQR();const q=qr(0,'L');q.addData(shareUrl);q.make();box.innerHTML=q.createSvgTag({cellSize:3,margin:2,scalable:true})}catch(e){box.innerHTML='<span class="hint">สร้าง QR ไม่ได้ตอนนี้ ใช้ลิงก์แทนได้เลย</span>'}
+}
+let shT;$('shName').addEventListener('input',()=>{S.me=$('shName').value.trim().slice(0,40);save();clearTimeout(shT);shT=setTimeout(refreshShare,300)});
+$('shCopy').onclick=async()=>{try{await navigator.clipboard.writeText(shareUrl);toast('คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย')}catch(e){$('shLink').focus();$('shLink').select();toast('กด Ctrl/⌘+C เพื่อคัดลอก')}};
+try{if(navigator.share)$('shNative').hidden=false}catch(e){}
+$('shNative').onclick=async()=>{try{await navigator.share({title:'ตารางเรียนของ'+($('shName').value.trim()||'ฉัน'),text:'ดูตารางเรียนของ'+($('shName').value.trim()||'ฉัน')+' บนคาบ',url:shareUrl})}catch(e){}};
+$('shFile').onclick=async()=>{const ok=await saveFile('khab-backup.json',new Blob([toJSONBackup()],{type:'application/json'}));if(ok)toast('บันทึกไฟล์สำรองแล้ว')};
+$('shClose').onclick=()=>$('sov').classList.remove('show');$('sov').onclick=e=>{if(e.target===$('sov'))$('sov').classList.remove('show')};
+document.addEventListener('click',e=>{if(e.target.closest('[data-act=share]'))openShare()});
+
+/* viewing a friend's link */
+VIEW=null;MINE=null;
+async function enterView(tok){
+  let d;try{d=await decodeShare(tok)}catch(e){toast(e&&e.message==='nodecomp'?'เบราว์เซอร์นี้เปิดลิงก์ไม่ได้ ลองอัปเดตเบราว์เซอร์':'ลิงก์ตารางไม่ถูกต้องหรือไม่ครบ');return false}
+  if(!d.courses.length){toast('ลิงก์นี้ไม่มีรายวิชา');return false}
+  MINE=MINE||JSON.parse(JSON.stringify(S.courses));VIEW=d;S.courses=d.courses;document.body.classList.add('viewing');
+  $('vbName').textContent='ตารางของ'+(d.name?' '+d.name:'เพื่อน');$('vbTerm').textContent=[d.term,d.courses.length+' วิชา'].filter(Boolean).join(' · ');
+  go('week');render();return true;
+}
+function exitView(keep){
+  if(!VIEW)return;if(keep){S.courses=VIEW.courses;VIEW=null;MINE=null;save()}else{S.courses=MINE;VIEW=null;MINE=null}
+  document.body.classList.remove('viewing');try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}render();
+}
+$('vbBack').onclick=()=>exitView(false);
+$('vbUse').onclick=()=>{const old=JSON.stringify(MINE||[]);exitView(true);undoState=old;undoPaste=null;toast('ใช้ตารางนี้เป็นตารางของฉันแล้ว',true)};
+
+/* editor */
+let edId=null,edCol=0;
+const dayOpts=d=>DAYS.map((n,i)=>`<option value="${i}"${i===d?' selected':''}>${n}</option>`).join('');
+function paintSw(){$('fCol').innerHTML=theme().pal.map((p,i)=>`<button type="button" data-c="${i}" class="${i===edCol?'on':''}" style="background:${p[0]};box-shadow:inset 0 0 0 2px ${p[2]}" aria-label="สี ${i+1}"></button>`).join('')}
+$('fCol').onclick=e=>{const b=e.target.closest('[data-c]');if(b){edCol=+b.dataset.c;paintSw()}};
+function sesRow(s){const r=document.createElement('div');r.className='ses';
+  r.innerHTML=`<select class="f" aria-label="วัน">${dayOpts(s.d)}</select><input class="f" aria-label="เริ่ม" value="${fm(s.s)}"><input class="f" aria-label="จบ" value="${fm(s.e)}"><input class="f" aria-label="ห้อง" value="${esc(s.room||'')}" placeholder="ห้อง"><button class="ic rm" aria-label="ลบคาบ" style="color:var(--bad)">ลบ</button>`;
+  r.querySelector('.rm').onclick=()=>r.remove();$('fSes').appendChild(r)}
+function openEd(id){
+  if(VIEW){toast('นี่คือตารางของเพื่อน กด “ใช้เป็นตารางของฉัน” ก่อนถึงจะแก้ได้');return}
+  const c=id?S.courses.find(x=>x.id===id):null;if(id&&!c)return;edId=id;
+  $('mdt').textContent=c?'แก้ไขวิชา':'เพิ่มวิชา';$('fDel').style.display=c?'':'none';
+  $('fCode').value=c?.code||'';$('fSec').value=c?.sec||'';$('fName').value=c?.name||'';$('fCr').value=c?.credits??'';
+  edCol=c?.color??(S.courses.length%8);paintSw();
+  $('fSes').innerHTML='';(c?c.sessions:[{d:0,s:540,e:720,room:''}]).forEach(sesRow);
+  $('ov').classList.add('show');setTimeout(()=>$(c?'fName':'fCode').focus(),30)}
+const close=()=>{$('ov').classList.remove('show');edId=null};
+$('fCancel').onclick=close;$('ov').onclick=e=>{if(e.target===$('ov'))close()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();$('xov').classList.remove('show');$('sov').classList.remove('show');$('pop').classList.remove('show')}});
+$('fAddS').onclick=()=>sesRow({d:0,s:540,e:720,room:''});
+$('add').onclick=()=>openEd(null);
+$('fSave').onclick=()=>{
+  const sessions=[];let bad=false;const prev=edId&&S.courses.find(x=>x.id===edId);
+  $('fSes').querySelectorAll('.ses').forEach(r=>{const [d,a,b,rm]=r.querySelectorAll('select,input');const s=pm(a.value),e=pm(b.value);
+    if(isNaN(s)||isNaN(e)||e<=s){bad=true;a.style.outline=b.style.outline='2px solid var(--bad)';return}
+    const old=prev&&prev.sessions.find(o=>o.d===+d.value&&o.s===s);sessions.push({d:+d.value,s,e,room:rm.value.trim(),kind:old?.kind||''})});
+  if(bad){toast('เวลาไม่ถูกต้อง ใช้รูปแบบ 09:00 และเวลาจบต้องหลังเวลาเริ่ม');return}
+  const code=$('fCode').value.trim();if(!code&&!$('fName').value.trim()){toast('ใส่รหัสหรือชื่อวิชาก่อน');return}
+  snap();const data={code,sec:$('fSec').value.trim(),name:$('fName').value.trim(),credits:$('fCr').value.trim()===''?'':+$('fCr').value||0,color:edCol,sessions};
+  if(prev)Object.assign(prev,data);else S.courses.push({id:uid(),...data});
+  save();render();close()};
+$('fDel').onclick=()=>{snap();const c=S.courses.find(x=>x.id===edId);S.courses=S.courses.filter(x=>x.id!==edId);save();render();close();toast(`ลบ ${c?.name||c?.code||'วิชา'} แล้ว`,true)};
+
+$('term').value=S.term||'ภาคปลาย 2569';$('term').oninput=e=>{S.term=e.target.value;save()};
+applyTheme();route();render();
+{const tk=tokFrom(location.search);if(tk)enterView(tk)}
+addEventListener('hashchange',route);
+let rw;addEventListener('resize',()=>{clearTimeout(rw);rw=setTimeout(render,150)});
+setInterval(render,30000);
+new MutationObserver(()=>{if(!S.theme){applyTheme();render()}}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!S.theme){applyTheme();render()}});
+}
+</script>
+</body>
+</html>
