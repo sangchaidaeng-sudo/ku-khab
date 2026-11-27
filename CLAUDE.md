@@ -19,7 +19,8 @@ tools/build.py    ← สร้าง index.html จาก src/app.html (ใส�
 index.html        ← ไฟล์ที่ deploy (generated — อย่าแก้ตรง)
 guide.html        ← หน้า SEO ข้อความล้วน: วิธีจัดตารางจาก MyKU (HowTo JSON-LD)
 ku-get-reg.html   ← หน้า SEO: "KU Get Reg ปิดแล้วใช้อะไรแทน" (FAQ JSON-LD)
-robots.txt, sitemap.xml, manifest.webmanifest, icon-*.png, apple-touch-icon.png, favicon-32.png, og.png
+robots.txt, sitemap.xml, manifest.webmanifest, og.png
+favicon.ico (16/32/48), favicon-48/96.png, icon-192/512.png, apple-touch-icon.png  ← Google ต้องการไอคอน ≥48px
 .vercelignore     ← ไม่ deploy src/ tools/ CLAUDE.md README.md
 ```
 
